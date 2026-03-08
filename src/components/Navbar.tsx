@@ -99,7 +99,8 @@ export default function Navbar() {
 
       {open && (
         <div
-          className="md:hidden border-t border-rose-100/50 bg-nude-50/98 backdrop-blur-md animate-fade-in"
+          className="md:hidden fixed inset-0 top-16 z-40 bg-nude-50/98 backdrop-blur-md border-t border-rose-100/50 animate-fade-in overflow-y-auto"
+          style={{ WebkitOverflowScrolling: "touch" }}
           role="dialog"
           aria-label="Menu de navegação"
         >
