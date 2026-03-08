@@ -37,8 +37,31 @@ export const metadata: Metadata = {
     description:
       "Realce seu olhar com atendimento especializado em cílios e sobrancelhas. Ermelino Matarazzo, São Paulo.",
     type: "website",
+    images: [
+      {
+        url: "/images/og/og-sabrina-lashes.png",
+        width: 1200,
+        height: 630,
+        alt: "Sabrina Lashes - Lash & Brow Designer em Ermelino Matarazzo, Sao Paulo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sabrina Lashes | Lash & Brow Designer",
+    description:
+      "Extensao de cilios e design de sobrancelhas com foco em valorizar o seu olhar em Ermelino Matarazzo, Sao Paulo.",
+    images: ["/images/og/og-sabrina-lashes.png"],
   },
   robots: "index, follow",
+  icons: {
+    icon: [
+      { url: "/icon.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-48.png", sizes: "48x48", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+  },
 };
 
 export default function RootLayout({
