@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-rose-pastel: #f9eef0;
+  --color-rose-light: #f5dfe1;
+  --color-brand-rose: #e8b4b8;
+  --color-nude-soft: #f5f0eb;
+  --color-wine-soft: #8b6b6b;
+  --color-text: #322721;
+  --color-text-muted: #5f4b42;
+  /* Ritmo de respiro entre seções */
+  --section-padding-y: 4.5rem;
+  --section-padding-y-md: 6.5rem;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --section-padding-y: 5.5rem;
+    --section-padding-y-md: 7.5rem;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply antialiased text-nude-950 bg-nude-50;
+  color: var(--color-text);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .section-spacing {
+    padding-top: var(--section-padding-y);
+    padding-bottom: var(--section-padding-y);
+  }
+  .section-spacing-lg {
+    padding-top: var(--section-padding-y-md);
+    padding-bottom: var(--section-padding-y-md);
+  }
+}
+
+/* Linha decorativa fina — identidade feminina */
+.section-divider {
+  position: relative;
+}
+.section-divider::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-brand-rose),
+    transparent
+  );
+  opacity: 0.5;
+}
+
+/* Ornamento sutil: ponto central (evita template genérico) */
+.ornament-dot::after {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 4px;
+  margin: 0.75rem auto 0;
+  border-radius: 50%;
+  background: var(--color-brand-rose);
+  opacity: 0.6;
+}
+
+/* Cards com hover delicado */
+.card-hover {
+  @apply transition-all duration-300 ease-out;
+}
+.card-hover:hover {
+  @apply -translate-y-0.5 shadow-md;
+  box-shadow: 0 8px 24px -8px rgba(139, 107, 107, 0.12);
+}
+
+/* Focus para acessibilidade */
+a:focus-visible,
+button:focus-visible {
+  @apply outline-2 outline-offset-2 outline-rose-400;
+}
