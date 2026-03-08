@@ -79,6 +79,34 @@ body {
   opacity: 0.6;
 }
 
+.hero-soft-bg {
+  background-image: url("/images/hero/hero-soft-bg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.ornament-floral-right {
+  position: absolute;
+  inset: auto 0 0 auto;
+  width: min(360px, 55vw);
+  height: 220px;
+  pointer-events: none;
+  background-image: url("/images/ornaments/floral-right.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: right bottom;
+  mix-blend-mode: screen;
+  opacity: 0.4;
+}
+
+.bg-testimonials-soft {
+  background-image: url("/images/backgrounds/bg-testimonials-soft.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 /* Cards com hover delicado */
 .card-hover {
   @apply transition-all duration-300 ease-out;

@@ -5,7 +5,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative min-h-[88vh] sm:min-h-[90vh] flex flex-col justify-center pt-28 sm:pt-32 pb-20 sm:pb-24 px-4 sm:px-6 bg-gradient-hero overflow-hidden"
+      className="relative min-h-[88vh] sm:min-h-[90vh] flex flex-col justify-center pt-28 sm:pt-32 pb-20 sm:pb-24 px-4 sm:px-6 hero-soft-bg overflow-hidden"
     >
       <div
         className="absolute inset-0 pointer-events-none opacity-25 sm:opacity-30"
