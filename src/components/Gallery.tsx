@@ -59,10 +59,6 @@ export default function Gallery() {
                 sizes="(min-width: 1024px) 520px, (min-width: 768px) 33vw, 50vw"
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent opacity-80 pointer-events-none" />
-              <p className="absolute left-2 bottom-2 sm:left-3 sm:bottom-3 text-[10px] sm:text-xs text-white/90 font-medium tracking-wide uppercase">
-                Cliente real
-              </p>
             </div>
           ))}
         </div>
