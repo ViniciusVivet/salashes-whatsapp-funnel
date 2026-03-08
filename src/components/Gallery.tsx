@@ -1,12 +1,33 @@
+import Image from "next/image";
 import SectionTitle from "./SectionTitle";
 
 const galleryItems = [
-  { id: "1", alt: "Extensão de cílios", featured: true },
-  { id: "2", alt: "Design de sobrancelhas" },
-  { id: "3", alt: "Fox eyes" },
-  { id: "4", alt: "Brow lamination" },
-  { id: "5", alt: "Detalhe dos cílios" },
-  { id: "6", alt: "Atendimento" },
+  {
+    id: "1",
+    alt: "Detalhe de extensao de cilios em close",
+    src: "/images/gallery/cliente-closeup-1.png",
+    featured: true,
+  },
+  {
+    id: "2",
+    alt: "Extensao de cilios e sobrancelha desenhada",
+    src: "/images/gallery/cliente-closeup-2.png",
+  },
+  {
+    id: "3",
+    alt: "Cliente em maca apos procedimento de cilios e sobrancelhas",
+    src: "/images/gallery/cliente-retrato-1.png",
+  },
+  {
+    id: "4",
+    alt: "Cliente com cachos e sobrancelhas alinhadas",
+    src: "/images/gallery/cliente-retrato-2.png",
+  },
+  {
+    id: "5",
+    alt: "Cliente com cilios marcantes em ambiente colorido",
+    src: "/images/gallery/cliente-retrato-3.png",
+  },
 ];
 
 export default function Gallery() {
@@ -18,35 +39,33 @@ export default function Gallery() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <SectionTitle
           title="Galeria"
-          subtitle="Alguns resultados e momentos do meu trabalho"
+          subtitle="Alguns olhares que ja passaram pela minha maca"
         />
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
           {galleryItems.map((item) => (
             <div
               key={item.id}
               className={`
-                overflow-hidden rounded-xl md:rounded-2xl border border-rose-100/50
+                relative overflow-hidden rounded-xl md:rounded-2xl border border-rose-100/60
                 card-hover bg-gradient-to-br from-rose-50 to-nude-100/80
-                aspect-square
-                ${item.featured ? "md:col-span-2 md:aspect-[2/1]" : ""}
+                aspect-[4/5] sm:aspect-square
+                ${item.featured ? "md:col-span-2 md:aspect-[16/9]" : ""}
               `}
             >
-              <div
-                className="w-full h-full flex items-center justify-center min-h-[120px] sm:min-h-[160px] md:min-h-[200px] group"
-                role="img"
-                aria-label={item.alt}
-              >
-                <span className="text-nude-400/60 text-[10px] sm:text-xs text-center px-2 font-medium group-hover:text-nude-500/80 transition-colors">
-                  {item.alt}
-                </span>
-              </div>
+              <Image
+                src={item.src}
+                alt={item.alt}
+                fill
+                sizes="(min-width: 1024px) 520px, (min-width: 768px) 33vw, 50vw"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent opacity-80 pointer-events-none" />
+              <p className="absolute left-2 bottom-2 sm:left-3 sm:bottom-3 text-[10px] sm:text-xs text-white/90 font-medium tracking-wide uppercase">
+                Cliente real
+              </p>
             </div>
           ))}
         </div>
-        <p className="mt-6 text-center text-nude-500 text-sm">
-          Estrutura pronta para suas fotos em{" "}
-          <code className="text-nude-600 bg-nude-100/80 px-1.5 py-0.5 rounded text-xs">public/images</code>.
-        </p>
       </div>
     </section>
   );

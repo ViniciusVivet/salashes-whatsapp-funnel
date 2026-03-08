@@ -1,3 +1,4 @@
+import Image from "next/image";
 import SectionTitle from "./SectionTitle";
 import { CtaWhatsApp } from "./CtaWhatsApp";
 
@@ -23,7 +24,36 @@ export default function About() {
             Atendo com horário marcado, uma cliente por vez. Assim consigo dedicar tempo e atenção. Se quiser conversar antes de agendar, é só chamar.
           </p>
         </div>
-        <div className="mt-12">
+        <div className="mt-8 flex gap-3 sm:gap-4">
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border border-rose-100/70 bg-rose-50/60">
+            <Image
+              src="/images/gallery/cliente-closeup-2.png"
+              alt="Extensao de cilios em cliente real"
+              fill
+              sizes="96px"
+              className="object-cover"
+            />
+          </div>
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border border-rose-100/70 bg-rose-50/60">
+            <Image
+              src="/images/gallery/cliente-retrato-1.png"
+              alt="Cliente apos procedimento na maca"
+              fill
+              sizes="96px"
+              className="object-cover"
+            />
+          </div>
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border border-rose-100/70 bg-rose-50/60 hidden sm:block">
+            <Image
+              src="/images/gallery/cliente-retrato-2.png"
+              alt="Cliente com sobrancelhas alinhadas"
+              fill
+              sizes="96px"
+              className="object-cover"
+            />
+          </div>
+        </div>
+        <div className="mt-10">
           <CtaWhatsApp variant="secondary">
             Conte comigo — chame no WhatsApp
           </CtaWhatsApp>
