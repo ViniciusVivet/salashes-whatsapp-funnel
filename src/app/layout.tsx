@@ -55,11 +55,7 @@ export const metadata: Metadata = {
   },
   robots: "index, follow",
   icons: {
-    icon: [
-      { url: "/icon.png", sizes: "32x32", type: "image/png" },
-      { url: "/icon-48.png", sizes: "48x48", type: "image/png" },
-      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
-    ],
+    icon: { url: "/icon.png", sizes: "32x32", type: "image/png" },
     apple: { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
   },
 };

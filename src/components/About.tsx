@@ -6,9 +6,28 @@ export default function About() {
   return (
     <section
       id="sobre"
-      className="section-spacing-lg bg-white border-t border-rose-100/40"
+      className="relative section-spacing-lg bg-white border-t border-rose-100/40 overflow-hidden"
     >
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+      {/* Background horizontal em largura total, fade suave para o texto */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="relative w-full h-full min-h-[320px]">
+          <Image
+            src="/images/about/avatar-sabrina.png"
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover object-left"
+            priority={false}
+            aria-hidden
+          />
+        </div>
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-white/50 via-white/85 to-white"
+          aria-hidden
+        />
+      </div>
+
+      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6">
         <SectionTitle
           title="Sobre a Sabrina"
           subtitle="Quem cuida do seu olhar com dedicação e técnica"
@@ -24,51 +43,21 @@ export default function About() {
             Atendo com horário marcado, uma cliente por vez. Assim consigo dedicar tempo e atenção. Se quiser conversar antes de agendar, é só chamar.
           </p>
         </div>
-        <div className="mt-8 flex flex-wrap gap-3 sm:gap-4">
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border border-rose-100/70 bg-rose-50/60">
-            <Image
-              src="/images/gallery/cliente-closeup-2.png"
-              alt="Extensao de cilios em cliente real"
-              fill
-              sizes="96px"
-              className="object-cover"
-            />
+        <div className="mt-8 flex flex-wrap gap-2 sm:gap-4">
+          <div className="relative w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl overflow-hidden border border-rose-100/70 bg-rose-50/60">
+            <Image src="/images/gallery/cliente-closeup-2.png" alt="Extensao de cilios em cliente real" fill sizes="96px" className="object-cover" />
           </div>
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border border-rose-100/70 bg-rose-50/60">
-            <Image
-              src="/images/gallery/cliente-retrato-1.png"
-              alt="Cliente apos procedimento na maca"
-              fill
-              sizes="96px"
-              className="object-cover"
-            />
+          <div className="relative w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl overflow-hidden border border-rose-100/70 bg-rose-50/60">
+            <Image src="/images/gallery/cliente-retrato-1.png" alt="Cliente apos procedimento na maca" fill sizes="96px" className="object-cover" />
           </div>
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border border-rose-100/70 bg-rose-50/60 hidden sm:block">
-            <Image
-              src="/images/gallery/cliente-retrato-2.png"
-              alt="Cliente com sobrancelhas alinhadas"
-              fill
-              sizes="96px"
-              className="object-cover"
-            />
+          <div className="relative w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl overflow-hidden border border-rose-100/70 bg-rose-50/60">
+            <Image src="/images/gallery/cliente-retrato-2.png" alt="Cliente com sobrancelhas alinhadas" fill sizes="96px" className="object-cover" />
           </div>
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border border-rose-100/70 bg-rose-50/60 hidden sm:block">
-            <Image
-              src="/images/gallery/cliente-retrato-5.png"
-              alt="Cliente apos procedimento"
-              fill
-              sizes="96px"
-              className="object-cover"
-            />
+          <div className="relative w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl overflow-hidden border border-rose-100/70 bg-rose-50/60">
+            <Image src="/images/gallery/cliente-retrato-5.png" alt="Cliente apos procedimento" fill sizes="96px" className="object-cover" />
           </div>
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border border-rose-100/70 bg-rose-50/60 hidden sm:block">
-            <Image
-              src="/images/gallery/cliente-retrato-6.png"
-              alt="Cliente no studio"
-              fill
-              sizes="96px"
-              className="object-cover"
-            />
+          <div className="relative w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl overflow-hidden border border-rose-100/70 bg-rose-50/60">
+            <Image src="/images/gallery/cliente-retrato-6.png" alt="Cliente no studio" fill sizes="96px" className="object-cover" />
           </div>
         </div>
         <div className="mt-10">

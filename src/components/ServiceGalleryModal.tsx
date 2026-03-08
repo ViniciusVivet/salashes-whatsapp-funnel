@@ -9,6 +9,8 @@ type ServiceGalleryModalProps = {
   images: string[];
   isOpen: boolean;
   onClose: () => void;
+  /** Índice inicial ao abrir (ex.: foto clicada na galeria) */
+  initialIndex?: number;
 };
 
 export default function ServiceGalleryModal({
@@ -16,12 +18,15 @@ export default function ServiceGalleryModal({
   images,
   isOpen,
   onClose,
+  initialIndex = 0,
 }: ServiceGalleryModalProps) {
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(initialIndex);
 
   useEffect(() => {
-    if (!isOpen) setIndex(0);
-  }, [isOpen]);
+    if (isOpen && images.length > 0)
+      setIndex(Math.min(images.length - 1, Math.max(0, initialIndex)));
+    else setIndex(0);
+  }, [isOpen, initialIndex, images.length]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -54,18 +59,18 @@ export default function ServiceGalleryModal({
         onClick={onClose}
         aria-hidden
       />
-      <div className="relative w-full max-w-lg rounded-2xl overflow-hidden bg-nude-900/95 shadow-xl border border-nude-700/50">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-nude-700/50">
-          <h3 className="font-serif text-lg font-semibold text-white">
+      <div className="relative w-full max-w-lg rounded-2xl overflow-hidden bg-nude-900/95 shadow-xl border border-nude-700/50 max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-3 py-2.5 sm:px-4 sm:py-3 border-b border-nude-700/50 flex-shrink-0">
+          <h3 className="font-serif text-base sm:text-lg font-semibold text-white truncate pr-2">
             {serviceName}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-full text-nude-300 hover:bg-nude-700/60 hover:text-white transition-colors"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-nude-300 hover:bg-nude-700/60 hover:text-white transition-colors touch-manipulation"
             aria-label="Fechar"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -115,17 +120,17 @@ export default function ServiceGalleryModal({
         </div>
 
         {images.length > 1 && (
-          <div className="flex justify-center gap-1.5 py-3 bg-nude-900/95">
+          <div className="flex justify-center flex-wrap gap-1.5 sm:gap-2 py-3 px-2 bg-nude-900/95 flex-shrink-0">
             {images.map((_, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => setIndex(i)}
                 className={cn(
-                  "w-2 h-2 rounded-full transition-colors",
-                  i === index ? "bg-rose-400" : "bg-white/40 hover:bg-white/60"
+                  "w-2.5 h-2.5 sm:w-2 sm:h-2 rounded-full transition-colors touch-manipulation",
+                  i === index ? "bg-rose-400" : "bg-white/40 hover:bg-white/60 active:bg-white/70"
                 )}
-                aria-label={`Ir para foto ${i + 1}`}
+                aria-label={`Ir para foto ${i + 1} de ${images.length}`}
               />
             ))}
           </div>

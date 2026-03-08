@@ -5,7 +5,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative min-h-[88vh] sm:min-h-[90vh] flex flex-col justify-center pt-28 sm:pt-32 pb-20 sm:pb-24 px-4 sm:px-6 hero-soft-bg overflow-hidden"
+      className="relative min-h-[70vh] sm:min-h-[72vh] flex flex-col justify-center pt-24 sm:pt-28 pb-14 sm:pb-18 px-4 sm:px-6 hero-soft-bg overflow-hidden"
     >
       <div
         className="absolute inset-0 pointer-events-none opacity-25 sm:opacity-30"
@@ -25,7 +25,7 @@ export default function Hero() {
         <p className="mt-6 sm:mt-7 text-base sm:text-lg md:text-xl text-nude-600 max-w-xl mx-auto leading-relaxed animate-fade-in-up">
           Atendimento personalizado em cílios e sobrancelhas no Ermelino Matarazzo. Aqui o foco é você: combinamos o procedimento certo e um resultado que você vai amar.
         </p>
-        <div className="mt-10 sm:mt-12 flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 justify-center items-center animate-fade-in-up">
+        <div className="mt-8 sm:mt-10 flex flex-col-reverse sm:flex-row flex-wrap gap-3 sm:gap-3 justify-center items-center animate-fade-in-up">
           <CtaWhatsApp variant="primary" className="w-full sm:w-auto">
             Quero falar no WhatsApp
           </CtaWhatsApp>
@@ -35,10 +35,22 @@ export default function Hero() {
           >
             Ver serviços
           </Link>
+          <Link
+            href="#galeria"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border-2 border-wine-200/80 text-nude-800 px-6 py-3.5 sm:px-8 sm:py-4 rounded-full text-base font-medium hover:border-rose-300 hover:bg-rose-50/60 transition-all"
+          >
+            Nossos trabalhos
+          </Link>
+          <Link
+            href="#localizacao"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border-2 border-wine-200/80 text-nude-800 px-6 py-3.5 sm:px-8 sm:py-4 rounded-full text-base font-medium hover:border-rose-300 hover:bg-rose-50/60 transition-all"
+          >
+            Conhecer o espaço
+          </Link>
         </div>
       </div>
 
-      <div className="relative mt-14 sm:mt-16 max-w-4xl mx-auto px-4" aria-hidden>
+      <div className="relative mt-10 sm:mt-12 max-w-4xl mx-auto px-4" aria-hidden>
         <div className="relative aspect-[16/9] sm:aspect-[4/2] max-h-56 sm:max-h-64 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-rose-100/90 via-rose-50/70 to-nude-200/60 border border-rose-100/40 overflow-hidden">
           <div className="absolute inset-0 opacity-15" aria-hidden>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full border border-rose-300/60" />

@@ -28,12 +28,12 @@ export default function Navbar() {
           Sabrina Lashes
         </Link>
 
-        <nav className="hidden md:flex items-center gap-7 lg:gap-8">
+        <nav className="hidden md:flex items-center gap-1 lg:gap-1.5">
           {navLinks.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="text-nude-600 hover:text-wine-600 text-sm font-medium transition-colors py-2"
+              className="text-nude-600 hover:text-rose-600 hover:bg-rose-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
             >
               {item.label}
             </Link>
@@ -99,7 +99,7 @@ export default function Navbar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="py-3.5 px-4 rounded-xl text-nude-700 font-medium hover:bg-rose-100/50 hover:text-wine-700 transition-colors min-h-[48px] flex items-center"
+                className="py-3.5 px-4 rounded-xl text-nude-700 font-medium hover:bg-rose-50 hover:text-rose-600 transition-colors duration-200 min-h-[48px] flex items-center"
               >
                 {item.label}
               </Link>
