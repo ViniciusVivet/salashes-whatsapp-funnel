@@ -6,8 +6,9 @@ export default function Testimonials() {
   return (
     <section
       id="depoimentos"
-      className="section-spacing-lg bg-gradient-soft border-t border-rose-100/40"
+      className="relative overflow-hidden section-spacing-lg bg-testimonials-soft border-t border-rose-100/40"
     >
+      <div className="ornament-floral-right" aria-hidden />
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <SectionTitle
           title="Depoimentos"
