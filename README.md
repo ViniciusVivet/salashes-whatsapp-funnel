@@ -50,15 +50,35 @@ O projeto agora tem:
 ### Configurar Supabase
 
 1. Crie um projeto gratuito no Supabase.
-2. No SQL Editor, execute os arquivos `supabase/migrations/001_scheduler_dashboard.sql` e `supabase/migrations/002_payment_and_editing_fields.sql`.
+2. No SQL Editor, execute os arquivos:
+   - `supabase/migrations/001_scheduler_dashboard.sql`
+   - `supabase/migrations/002_payment_and_editing_fields.sql`
+   - `supabase/migrations/003_lock_admin_to_allowlist.sql`
 3. Em Authentication > Users, crie o usuario da Sabrina com e-mail e senha.
-4. Copie `.env.example` para `.env.local` e preencha:
+4. Copie o `User UID` criado em Authentication > Users e rode:
+
+```sql
+insert into public.admin_users (user_id)
+values ('COLE_AQUI_O_USER_UID_DA_SABRINA')
+on conflict (user_id) do nothing;
+```
+
+5. Copie `.env.example` para `.env.local` e preencha:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_SITE_URL=
 ```
+
+### Checklist de seguranca
+
+- Nao commitar `.env` ou `.env.local`; eles ja estao no `.gitignore`.
+- Usar somente a chave `anon public` no frontend. Nunca usar `service_role` no projeto Next.
+- Em Supabase > Authentication > Providers, deixe cadastro publico desativado se o painel for usado apenas pela Sabrina.
+- Apenas usuarios listados em `public.admin_users` conseguem ler/editar clientes, agenda, caixa e gastos.
+- Visitantes anonimos so conseguem ler servicos ativos e criar solicitacoes de horario.
+- Depois de alterar variaveis na Vercel, faca redeploy.
 
 Depois disso:
 
