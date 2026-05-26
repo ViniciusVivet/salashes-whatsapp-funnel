@@ -917,7 +917,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className={viewMode === "week" || viewMode === "month" ? "-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0" : ""}>
-        <div className={viewMode === "week" || viewMode === "month" ? "w-max min-w-[720px]" : ""}>
+        <div className={viewMode === "week" || viewMode === "month" ? "w-max min-w-[588px] sm:min-w-[672px]" : ""}>
           {viewMode !== "day" && viewMode !== "year" && (
             <div className="grid grid-cols-7 gap-2 text-center text-[11px] font-bold uppercase tracking-[0.08em] text-nude-700">
               {["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"].map((day) => (
@@ -937,20 +937,20 @@ export default function AdminDashboard() {
             {calendarBuckets.map((bucket) => (
               <div
                 key={bucket.key}
-                className={`min-h-[132px] rounded-xl border p-2 text-left shadow-sm transition hover:border-rose-400 hover:bg-rose-50 ${
+                className={`min-h-[108px] rounded-xl border p-1.5 text-left shadow-sm transition hover:border-rose-400 hover:bg-rose-50 sm:min-h-[126px] sm:p-2 ${
                   bucket.muted
                     ? "border-nude-200 bg-nude-100/70 text-nude-400"
                     : "border-nude-300 bg-white text-nude-900"
                 }`}
               >
                 <span className="mb-2 flex items-center justify-between border-b border-nude-200 pb-1">
-                  <span className="text-xs font-bold uppercase tracking-[0.08em]">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.06em] sm:text-xs sm:tracking-[0.08em]">
                     {bucket.label}
                   </span>
                   <button
                     type="button"
                     onClick={() => startAppointmentForDate(bucket.date)}
-                    className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700 hover:bg-rose-200"
+                    className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700 hover:bg-rose-200 sm:px-2"
                     aria-label={`Criar agendamento em ${bucket.label}`}
                   >
                     +
@@ -962,7 +962,7 @@ export default function AdminDashboard() {
                       Livre
                     </span>
                   ) : (
-                    bucket.items.slice(0, 4).map((appointment) => (
+                    bucket.items.slice(0, 3).map((appointment) => (
                       <CalendarEventChip
                         key={appointment.id}
                         appointment={appointment}
@@ -970,9 +970,9 @@ export default function AdminDashboard() {
                       />
                     ))
                   )}
-                  {bucket.items.length > 4 && (
-                    <span className="block text-xs font-semibold text-nude-700">
-                      +{bucket.items.length - 4} horarios
+              {bucket.items.length > 3 && (
+                <span className="block text-[10px] font-semibold text-nude-700 sm:text-xs">
+                  +{bucket.items.length - 3} horarios
                     </span>
                   )}
                 </span>
@@ -1094,13 +1094,13 @@ export default function AdminDashboard() {
                 </p>
               </div>
             </div>
-            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 lg:min-w-[520px]">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:min-w-[520px]">
               <MiniMetric label="Horarios hoje" value={String(todayAppointments.length)} />
               <MiniMetric label="Pendentes" value={String(pendingRequests.length)} />
               <MiniMetric label="Vendido hoje" value={currency(todaySales)} />
             </div>
           </div>
-          <div className="-mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-2 md:overflow-visible md:px-0 xl:grid-cols-3">
+          <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {todayAppointments.slice(0, 6).map((appointment) => (
               <AppointmentCard
                 key={appointment.id}
@@ -1116,7 +1116,7 @@ export default function AdminDashboard() {
           </div>
         </section>
 
-        <div className="-mx-4 mt-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-4 md:overflow-visible md:px-0">
+        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
           <MetricFilter
             label="Faturamento"
             value={currency(metricRevenue)}
@@ -1149,26 +1149,43 @@ export default function AdminDashboard() {
           />
         </div>
 
-        <nav className="mt-6 flex gap-2 overflow-x-auto pb-2">
-          {[
-            ["agenda", "Agenda"],
-            ["clientes", "Clientes"],
-            ["servicos", "Servicos"],
-            ["caixa", "Caixa"],
-            ["gastos", "Gastos"],
-          ].map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setTab(key as Tab)}
-              className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
-                tab === key
-                  ? "bg-rose-600 text-white"
-                  : "border border-nude-300 bg-white text-nude-800 hover:bg-rose-50"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        <nav
+          className="mt-5 rounded-3xl border border-nude-300 bg-white p-3 shadow-md"
+          aria-label="Areas do painel"
+        >
+          <div className="mb-2 flex items-center justify-between gap-3 px-1">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-nude-700">
+              Areas do painel
+            </p>
+            <span className="text-xs font-medium text-nude-500">
+              {tab === "agenda" && "Agenda"}
+              {tab === "clientes" && "Clientes"}
+              {tab === "servicos" && "Servicos"}
+              {tab === "caixa" && "Caixa"}
+              {tab === "gastos" && "Gastos"}
+            </span>
+          </div>
+          <div className="grid grid-cols-5 gap-1.5">
+            {[
+              ["agenda", "Agenda"],
+              ["clientes", "Clientes"],
+              ["servicos", "Serv."],
+              ["caixa", "Caixa"],
+              ["gastos", "Gastos"],
+            ].map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setTab(key as Tab)}
+                className={`min-h-[44px] rounded-2xl px-2 py-2 text-xs font-bold transition sm:text-sm ${
+                  tab === key
+                    ? "bg-rose-600 text-white shadow-md"
+                    : "border border-nude-200 bg-nude-50 text-nude-800 hover:bg-rose-50"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </nav>
 
         {tab === "agenda" && (
@@ -1818,17 +1835,17 @@ function MetricFilter({
   onRangeChange: (range: RangeKey) => void;
 }) {
   return (
-    <div className="min-w-[230px] rounded-3xl border border-nude-300 bg-white p-4 shadow-md sm:p-5 md:min-w-0">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-bold uppercase tracking-[0.14em] text-nude-700">
+    <div className="min-w-0 rounded-2xl border border-nude-300 bg-white p-3 shadow-md sm:rounded-3xl sm:p-5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+        <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-nude-700 sm:text-xs sm:tracking-[0.14em]">
           {label}
         </p>
-        <label className="relative -mt-1">
+        <label className="relative">
           <span className="sr-only">Filtrar {label}</span>
           <select
             value={range}
             onChange={(event) => onRangeChange(event.target.value as RangeKey)}
-            className="max-w-[132px] appearance-none rounded-full border border-nude-300 bg-rose-50 py-1.5 pl-3 pr-7 text-xs font-semibold text-nude-800 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
+            className="w-full appearance-none rounded-full border border-nude-300 bg-rose-50 py-1.5 pl-2 pr-6 text-[10px] font-semibold text-nude-800 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200 sm:max-w-[132px] sm:pl-3 sm:pr-7 sm:text-xs"
           >
             {(Object.keys(rangeLabels) as RangeKey[]).map((key) => (
               <option key={key} value={key}>
@@ -1844,7 +1861,7 @@ function MetricFilter({
           </span>
         </label>
       </div>
-      <p className="mt-2 break-words font-serif text-2xl font-semibold text-nude-900">
+      <p className="mt-2 break-words font-serif text-xl font-semibold text-nude-900 sm:text-2xl">
         {value}
       </p>
     </div>
@@ -1853,9 +1870,11 @@ function MetricFilter({
 
 function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-[145px] rounded-2xl border border-nude-300 bg-nude-50 p-3 sm:min-w-0 sm:p-4">
-      <p className="text-xs font-bold text-nude-700">{label}</p>
-      <p className="mt-1 font-serif text-2xl font-semibold text-nude-900">
+    <div className="min-w-0 rounded-2xl border border-nude-300 bg-nude-50 p-2.5 sm:p-4">
+      <p className="text-[10px] font-bold leading-tight text-nude-700 sm:text-xs">
+        {label}
+      </p>
+      <p className="mt-1 break-words font-serif text-lg font-semibold text-nude-900 sm:text-2xl">
         {value}
       </p>
     </div>
@@ -1875,7 +1894,7 @@ function AppointmentCard({
 }) {
   const phone = appointment.customers?.phone;
   return (
-    <article className="min-w-[260px] rounded-2xl border border-nude-300 bg-white p-4 shadow-sm md:min-w-0">
+    <article className="min-w-0 rounded-2xl border border-nude-300 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-rose-600">
@@ -1957,7 +1976,7 @@ function CalendarEventChip({
     <button
       type="button"
       onClick={() => onEdit(appointment)}
-      className="block w-full rounded-lg border border-rose-200 bg-rose-50 px-2 py-1.5 text-left text-[11px] font-semibold text-nude-900 shadow-sm hover:border-rose-400 hover:bg-white"
+      className="block w-full rounded-md border border-rose-200 bg-rose-50 px-1.5 py-1 text-left text-[10px] font-semibold leading-tight text-nude-900 shadow-sm hover:border-rose-400 hover:bg-white sm:rounded-lg sm:px-2 sm:py-1.5 sm:text-[11px]"
       title="Clique para editar este agendamento"
     >
       <span className="block text-rose-700">{shortTime(appointment.starts_at)}</span>
