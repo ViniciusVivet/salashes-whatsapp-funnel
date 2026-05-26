@@ -866,66 +866,70 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {viewMode !== "day" && viewMode !== "year" && (
-        <div className="grid grid-cols-7 gap-2 text-center text-[11px] font-bold uppercase tracking-[0.08em] text-nude-700">
-          {["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"].map((day) => (
-            <span key={day}>{day}</span>
-          ))}
-        </div>
-      )}
-      <div
-        className={`grid gap-2 ${viewMode !== "day" && viewMode !== "year" ? "mt-2" : ""} ${
-          viewMode === "day"
-            ? "grid-cols-1"
-            : viewMode === "year"
-              ? "md:grid-cols-3 xl:grid-cols-4"
-              : "grid-cols-7"
-        }`}
-      >
-        {calendarBuckets.map((bucket) => (
+      <div className={viewMode === "week" || viewMode === "month" ? "overflow-x-auto pb-2" : ""}>
+        <div className={viewMode === "week" || viewMode === "month" ? "min-w-[720px]" : ""}>
+          {viewMode !== "day" && viewMode !== "year" && (
+            <div className="grid grid-cols-7 gap-2 text-center text-[11px] font-bold uppercase tracking-[0.08em] text-nude-700">
+              {["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"].map((day) => (
+                <span key={day}>{day}</span>
+              ))}
+            </div>
+          )}
           <div
-            key={bucket.key}
-            className={`min-h-[132px] rounded-xl border p-2 text-left shadow-sm transition hover:border-rose-400 hover:bg-rose-50 ${
-              bucket.muted
-                ? "border-nude-200 bg-nude-100/70 text-nude-400"
-                : "border-nude-300 bg-white text-nude-900"
+            className={`grid gap-2 ${viewMode !== "day" && viewMode !== "year" ? "mt-2" : ""} ${
+              viewMode === "day"
+                ? "grid-cols-1"
+                : viewMode === "year"
+                  ? "md:grid-cols-3 xl:grid-cols-4"
+                  : "grid-cols-7"
             }`}
           >
-            <span className="mb-2 flex items-center justify-between border-b border-nude-200 pb-1">
-              <span className="text-xs font-bold uppercase tracking-[0.08em]">
-                {bucket.label}
-              </span>
-              <button
-                type="button"
-                onClick={() => startAppointmentForDate(bucket.date)}
-                className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700 hover:bg-rose-200"
-                aria-label={`Criar agendamento em ${bucket.label}`}
+            {calendarBuckets.map((bucket) => (
+              <div
+                key={bucket.key}
+                className={`min-h-[132px] rounded-xl border p-2 text-left shadow-sm transition hover:border-rose-400 hover:bg-rose-50 ${
+                  bucket.muted
+                    ? "border-nude-200 bg-nude-100/70 text-nude-400"
+                    : "border-nude-300 bg-white text-nude-900"
+                }`}
               >
-                +
-              </button>
-            </span>
-            <span className="block space-y-1.5">
-              {bucket.items.length === 0 ? (
-                <span className="block text-xs font-medium text-nude-500">
-                  Livre
+                <span className="mb-2 flex items-center justify-between border-b border-nude-200 pb-1">
+                  <span className="text-xs font-bold uppercase tracking-[0.08em]">
+                    {bucket.label}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => startAppointmentForDate(bucket.date)}
+                    className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700 hover:bg-rose-200"
+                    aria-label={`Criar agendamento em ${bucket.label}`}
+                  >
+                    +
+                  </button>
                 </span>
-              ) : (
-                bucket.items.slice(0, 4).map((appointment) => (
-                  <CalendarEventChip
-                    key={appointment.id}
-                    appointment={appointment}
-                    onEdit={editAppointment}
-                  />
-                ))
-              )}
-              {bucket.items.length > 4 && (
-                <span className="block text-xs font-semibold text-nude-700">
-                  +{bucket.items.length - 4} horarios
+                <span className="block space-y-1.5">
+                  {bucket.items.length === 0 ? (
+                    <span className="block text-xs font-medium text-nude-500">
+                      Livre
+                    </span>
+                  ) : (
+                    bucket.items.slice(0, 4).map((appointment) => (
+                      <CalendarEventChip
+                        key={appointment.id}
+                        appointment={appointment}
+                        onEdit={editAppointment}
+                      />
+                    ))
+                  )}
+                  {bucket.items.length > 4 && (
+                    <span className="block text-xs font-semibold text-nude-700">
+                      +{bucket.items.length - 4} horarios
+                    </span>
+                  )}
                 </span>
-              )}
-            </span>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </Panel>
   );
@@ -998,7 +1002,7 @@ export default function AdminDashboard() {
             <p className="font-serif text-sm uppercase tracking-[0.22em] text-rose-600">
               Sabrina Lashes
             </p>
-            <h1 className="mt-2 font-serif text-4xl font-semibold text-nude-900">
+            <h1 className="mt-2 font-serif text-3xl font-semibold text-nude-900 sm:text-4xl">
               Painel de agenda e caixa
             </h1>
           </div>
@@ -1647,7 +1651,7 @@ export default function AdminDashboard() {
                 {filteredExpenseList.map((expense) => (
                   <div
                     key={expense.id}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-rose-100 bg-nude-50 p-4"
+                    className="flex flex-col gap-3 rounded-2xl border border-rose-100 bg-nude-50 p-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
                       <p className="font-medium text-nude-900">{expense.description}</p>
