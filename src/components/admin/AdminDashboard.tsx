@@ -192,6 +192,12 @@ export default function AdminDashboard() {
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [selectedDate, setSelectedDate] = useState(dateInputValue());
   const [range, setRange] = useState<RangeKey>("month");
+  const [metricRanges, setMetricRanges] = useState<Record<string, RangeKey>>({
+    revenue: "month",
+    appointments: "month",
+    ticket: "month",
+    profit: "month",
+  });
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [customerSearch, setCustomerSearch] = useState("");
@@ -455,6 +461,50 @@ export default function AdminDashboard() {
     filteredDoneAppointments.length > 0
       ? salesTotal / filteredDoneAppointments.length
       : 0;
+
+  function doneAppointmentsForRange(targetRange: RangeKey) {
+    const start = rangeStart(targetRange);
+    return appointments.filter((appointment) => {
+      if (appointment.status !== "done") return false;
+      if (!start) return true;
+      return new Date(appointment.starts_at) >= start;
+    });
+  }
+
+  function expensesForRange(targetRange: RangeKey) {
+    const start = rangeStart(targetRange);
+    return expenses.filter((expense) => {
+      if (!start) return true;
+      return new Date(`${expense.spent_at}T00:00:00`) >= start;
+    });
+  }
+
+  const revenueAppointments = doneAppointmentsForRange(metricRanges.revenue);
+  const appointmentMetricItems = doneAppointmentsForRange(metricRanges.appointments);
+  const ticketAppointments = doneAppointmentsForRange(metricRanges.ticket);
+  const profitAppointments = doneAppointmentsForRange(metricRanges.profit);
+  const profitExpenses = expensesForRange(metricRanges.profit);
+
+  const metricRevenue = revenueAppointments.reduce(
+    (sum, appointment) => sum + Number(appointment.price || 0),
+    0
+  );
+  const metricTicketTotal = ticketAppointments.reduce(
+    (sum, appointment) => sum + Number(appointment.price || 0),
+    0
+  );
+  const metricProfitRevenue = profitAppointments.reduce(
+    (sum, appointment) => sum + Number(appointment.price || 0),
+    0
+  );
+  const metricProfitExpenses = profitExpenses.reduce(
+    (sum, expense) => sum + Number(expense.amount || 0),
+    0
+  );
+
+  function setMetricRange(metric: string, nextRange: RangeKey) {
+    setMetricRanges((current) => ({ ...current, [metric]: nextRange }));
+  }
 
   const topService = useMemo(() => {
     const count = new Map<string, number>();
@@ -1066,10 +1116,36 @@ export default function AdminDashboard() {
         </section>
 
         <div className="mt-6 grid gap-4 md:grid-cols-4">
-          <Metric label="Faturamento" value={currency(salesTotal)} />
-          <Metric label="Atendimentos" value={String(filteredDoneAppointments.length)} />
-          <Metric label="Ticket medio" value={currency(ticketAverage)} />
-          <Metric label="Lucro estimado" value={currency(salesTotal - expensesTotal)} />
+          <MetricFilter
+            label="Faturamento"
+            value={currency(metricRevenue)}
+            range={metricRanges.revenue}
+            onRangeChange={(nextRange) => setMetricRange("revenue", nextRange)}
+          />
+          <MetricFilter
+            label="Atendimentos"
+            value={String(appointmentMetricItems.length)}
+            range={metricRanges.appointments}
+            onRangeChange={(nextRange) =>
+              setMetricRange("appointments", nextRange)
+            }
+          />
+          <MetricFilter
+            label="Ticket medio"
+            value={currency(
+              ticketAppointments.length > 0
+                ? metricTicketTotal / ticketAppointments.length
+                : 0
+            )}
+            range={metricRanges.ticket}
+            onRangeChange={(nextRange) => setMetricRange("ticket", nextRange)}
+          />
+          <MetricFilter
+            label="Lucro estimado"
+            value={currency(metricProfitRevenue - metricProfitExpenses)}
+            range={metricRanges.profit}
+            onRangeChange={(nextRange) => setMetricRange("profit", nextRange)}
+          />
         </div>
 
         <nav className="mt-6 flex gap-2 overflow-x-auto pb-2">
@@ -1722,6 +1798,51 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-nude-700">
         {label}
       </p>
+      <p className="mt-2 break-words font-serif text-2xl font-semibold text-nude-900">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function MetricFilter({
+  label,
+  value,
+  range,
+  onRangeChange,
+}: {
+  label: string;
+  value: string;
+  range: RangeKey;
+  onRangeChange: (range: RangeKey) => void;
+}) {
+  return (
+    <div className="rounded-3xl border border-nude-300 bg-white p-5 shadow-md">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-nude-700">
+          {label}
+        </p>
+        <label className="relative -mt-1">
+          <span className="sr-only">Filtrar {label}</span>
+          <select
+            value={range}
+            onChange={(event) => onRangeChange(event.target.value as RangeKey)}
+            className="max-w-[132px] appearance-none rounded-full border border-nude-300 bg-rose-50 py-1.5 pl-3 pr-7 text-xs font-semibold text-nude-800 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
+          >
+            {(Object.keys(rangeLabels) as RangeKey[]).map((key) => (
+              <option key={key} value={key}>
+                {rangeLabels[key]}
+              </option>
+            ))}
+          </select>
+          <span
+            className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-nude-700"
+            aria-hidden
+          >
+            ▼
+          </span>
+        </label>
+      </div>
       <p className="mt-2 break-words font-serif text-2xl font-semibold text-nude-900">
         {value}
       </p>
