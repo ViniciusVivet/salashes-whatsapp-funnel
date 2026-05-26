@@ -233,9 +233,19 @@ export default function ScheduleRequestForm() {
         </label>
       </div>
 
-      {error && <p className="mt-4 text-sm font-medium text-red-600">{error}</p>}
+      {error && (
+        <p className="mt-4 text-sm font-medium text-red-600" role="alert">
+          {error}
+        </p>
+      )}
       {message && (
-        <p className="mt-4 text-sm font-medium text-emerald-700">{message}</p>
+        <p
+          className="mt-4 text-sm font-medium text-emerald-700"
+          role="status"
+          aria-live="polite"
+        >
+          {message}
+        </p>
       )}
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">

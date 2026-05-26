@@ -36,6 +36,8 @@ export type Appointment = {
   ends_at: string | null;
   status: AppointmentStatus;
   price: number;
+  payment_method: string | null;
+  paid: boolean;
   notes: string | null;
   created_at: string;
   updated_at: string;

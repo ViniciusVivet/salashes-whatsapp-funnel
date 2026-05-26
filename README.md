@@ -50,7 +50,7 @@ O projeto agora tem:
 ### Configurar Supabase
 
 1. Crie um projeto gratuito no Supabase.
-2. No SQL Editor, execute o arquivo `supabase/migrations/001_scheduler_dashboard.sql`.
+2. No SQL Editor, execute os arquivos `supabase/migrations/001_scheduler_dashboard.sql` e `supabase/migrations/002_payment_and_editing_fields.sql`.
 3. Em Authentication > Users, crie o usuario da Sabrina com e-mail e senha.
 4. Copie `.env.example` para `.env.local` e preencha:
 
