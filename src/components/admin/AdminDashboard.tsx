@@ -916,8 +916,8 @@ export default function AdminDashboard() {
         />
       </div>
 
-      <div className={viewMode === "week" || viewMode === "month" ? "overflow-x-auto pb-2" : ""}>
-        <div className={viewMode === "week" || viewMode === "month" ? "min-w-[720px]" : ""}>
+      <div className={viewMode === "week" || viewMode === "month" ? "-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0" : ""}>
+        <div className={viewMode === "week" || viewMode === "month" ? "w-max min-w-[720px]" : ""}>
           {viewMode !== "day" && viewMode !== "year" && (
             <div className="grid grid-cols-7 gap-2 text-center text-[11px] font-bold uppercase tracking-[0.08em] text-nude-700">
               {["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"].map((day) => (
@@ -1082,24 +1082,25 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        <section className="mt-6 rounded-3xl border border-nude-300 bg-white p-5 shadow-md">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h2 className="font-serif text-2xl font-semibold text-nude-900">
-                Hoje
-              </h2>
-              <p className="mt-1 text-sm font-medium text-nude-700">
-                Use esta area para acompanhar o dia. Atendimentos so entram no
-                caixa quando voce marca como Feito.
-              </p>
+        <section className="mt-5 rounded-3xl border border-nude-300 bg-white p-4 shadow-md sm:p-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="font-serif text-2xl font-semibold text-nude-900">
+                  Hoje
+                </h2>
+                <p className="mt-1 text-xs font-medium text-nude-700 sm:text-sm">
+                  Marque como Feito para entrar no caixa.
+                </p>
+              </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[520px]">
+            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 lg:min-w-[520px]">
               <MiniMetric label="Horarios hoje" value={String(todayAppointments.length)} />
               <MiniMetric label="Pendentes" value={String(pendingRequests.length)} />
               <MiniMetric label="Vendido hoje" value={currency(todaySales)} />
             </div>
           </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="-mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-2 md:overflow-visible md:px-0 xl:grid-cols-3">
             {todayAppointments.slice(0, 6).map((appointment) => (
               <AppointmentCard
                 key={appointment.id}
@@ -1115,7 +1116,7 @@ export default function AdminDashboard() {
           </div>
         </section>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-4">
+        <div className="-mx-4 mt-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-4 md:overflow-visible md:px-0">
           <MetricFilter
             label="Faturamento"
             value={currency(metricRevenue)}
@@ -1782,7 +1783,7 @@ function Panel({
 }) {
   return (
     <section
-      className={`rounded-3xl border border-nude-300 bg-white p-5 shadow-md sm:p-6 ${className}`}
+      className={`min-w-0 rounded-3xl border border-nude-300 bg-white p-4 shadow-md sm:p-6 ${className}`}
     >
       <h2 className="mb-4 font-serif text-2xl font-semibold text-nude-900">
         {title}
@@ -1817,7 +1818,7 @@ function MetricFilter({
   onRangeChange: (range: RangeKey) => void;
 }) {
   return (
-    <div className="rounded-3xl border border-nude-300 bg-white p-5 shadow-md">
+    <div className="min-w-[230px] rounded-3xl border border-nude-300 bg-white p-4 shadow-md sm:p-5 md:min-w-0">
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-nude-700">
           {label}
@@ -1852,7 +1853,7 @@ function MetricFilter({
 
 function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-nude-300 bg-nude-50 p-4">
+    <div className="min-w-[145px] rounded-2xl border border-nude-300 bg-nude-50 p-3 sm:min-w-0 sm:p-4">
       <p className="text-xs font-bold text-nude-700">{label}</p>
       <p className="mt-1 font-serif text-2xl font-semibold text-nude-900">
         {value}
@@ -1874,7 +1875,7 @@ function AppointmentCard({
 }) {
   const phone = appointment.customers?.phone;
   return (
-    <article className="rounded-2xl border border-nude-300 bg-white p-4 shadow-sm">
+    <article className="min-w-[260px] rounded-2xl border border-nude-300 bg-white p-4 shadow-sm md:min-w-0">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-rose-600">
@@ -1972,7 +1973,7 @@ function CalendarEventChip({
 
 function Empty({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-2xl border border-dashed border-nude-300 bg-rose-50 p-4 text-sm font-medium text-nude-600">
+    <p className="min-w-[240px] rounded-2xl border border-dashed border-nude-300 bg-rose-50 p-4 text-sm font-medium text-nude-600 md:min-w-0">
       {children}
     </p>
   );
