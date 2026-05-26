@@ -39,3 +39,37 @@ O projeto está pronto para deploy na Vercel (conectar o repositório e fazer de
 ## Alterar WhatsApp
 
 Edite `src/lib/whatsapp.ts`: `WHATSAPP_NUMBER` e `DEFAULT_MESSAGE`.
+
+## Agenda e painel administrativo
+
+O projeto agora tem:
+
+- `/agendar` — formulario publico para a cliente solicitar horario.
+- `/admin` — painel com login para agenda, clientes, servicos, caixa e gastos.
+
+### Configurar Supabase
+
+1. Crie um projeto gratuito no Supabase.
+2. No SQL Editor, execute o arquivo `supabase/migrations/001_scheduler_dashboard.sql`.
+3. Em Authentication > Users, crie o usuario da Sabrina com e-mail e senha.
+4. Copie `.env.example` para `.env.local` e preencha:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SITE_URL=
+```
+
+Depois disso:
+
+```bash
+npm run dev
+```
+
+Fluxo esperado:
+
+1. A cliente solicita horario em `/agendar`.
+2. A Sabrina entra em `/admin`.
+3. Ela aprova a solicitacao, que vira agendamento confirmado.
+4. Quando marcar o agendamento como `Feito`, ele entra no caixa.
+5. Gastos cadastrados entram no calculo de lucro estimado.

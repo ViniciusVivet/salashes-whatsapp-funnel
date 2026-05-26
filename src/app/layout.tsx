@@ -18,6 +18,9 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://sabrina-lashes.vercel.app"
+  ),
   title: "Sabrina Lashes | Lash & Brow Designer — Ermelino Matarazzo, SP",
   description:
     "Sabrina Silva, Lash & Brow Designer. Extensão de cílios, design de sobrancelhas e procedimentos para realçar seu olhar. Atendimento em Ermelino Matarazzo, São Paulo. Agende pelo WhatsApp.",

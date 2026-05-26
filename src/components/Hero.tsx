@@ -30,6 +30,12 @@ export default function Hero() {
             Quero falar no WhatsApp
           </CtaWhatsApp>
           <Link
+            href="/agendar"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-nude-900 text-white px-6 py-3.5 sm:px-8 sm:py-4 rounded-full text-base font-medium hover:bg-nude-800 transition-all"
+          >
+            Solicitar horario
+          </Link>
+          <Link
             href="#servicos"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border-2 border-wine-200/80 text-nude-800 px-6 py-3.5 sm:px-8 sm:py-4 rounded-full text-base font-medium hover:border-rose-300 hover:bg-rose-50/60 transition-all"
           >

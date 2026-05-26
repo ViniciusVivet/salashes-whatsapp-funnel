@@ -13,6 +13,7 @@ const navLinks = [
   { href: "#depoimentos", label: "Depoimentos" },
   { href: "#localizacao", label: "Onde fico" },
   { href: "#faq", label: "FAQ" },
+  { href: "/agendar", label: "Agendar" },
 ];
 
 export default function Navbar() {
