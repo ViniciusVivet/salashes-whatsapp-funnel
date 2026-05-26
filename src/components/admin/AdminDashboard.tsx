@@ -146,6 +146,20 @@ function normalizePhone(phone: string) {
   return phone.replace(/\D/g, "");
 }
 
+function uniqueList(items: (string | null | undefined)[]) {
+  return Array.from(
+    new Set(items.filter((item): item is string => Boolean(item?.trim())))
+  );
+}
+
+function matchingSuggestions(value: string, suggestions: string[], limit = 6) {
+  const term = value.trim().toLowerCase();
+  if (!term) return [];
+  return suggestions
+    .filter((item) => item.toLowerCase().includes(term))
+    .slice(0, limit);
+}
+
 function whatsAppUrl(phone: string, text = "Oi! Tudo bem?") {
   const normalized = normalizePhone(phone);
   const withCountry = normalized.startsWith("55") ? normalized : `55${normalized}`;
@@ -158,6 +172,13 @@ function appointmentRange(appointment: Appointment) {
     ? new Date(appointment.ends_at)
     : addMinutes(start, 90);
   return { start, end };
+}
+
+function shortTime(value: string) {
+  return new Date(value).toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export default function AdminDashboard() {
@@ -345,6 +366,8 @@ export default function AdminDashboard() {
             day: "2-digit",
             month: "2-digit",
           }),
+          date,
+          muted: false,
           items: visibleAppointments.filter((appointment) =>
             sameDay(new Date(appointment.starts_at), date)
           ),
@@ -353,19 +376,19 @@ export default function AdminDashboard() {
     }
 
     if (viewMode === "month") {
-      const daysInMonth = new Date(
-        selected.getFullYear(),
-        selected.getMonth() + 1,
-        0
-      ).getDate();
-      return Array.from({ length: daysInMonth }, (_, index) => {
-        const date = new Date(selected.getFullYear(), selected.getMonth(), index + 1);
+      const firstDay = new Date(selected.getFullYear(), selected.getMonth(), 1);
+      const gridStart = startOfWeek(firstDay);
+      return Array.from({ length: 42 }, (_, index) => {
+        const date = new Date(gridStart);
+        date.setDate(gridStart.getDate() + index);
         return {
           key: date.toISOString(),
           label: date.toLocaleDateString("pt-BR", {
             day: "2-digit",
             month: "2-digit",
           }),
+          date,
+          muted: date.getMonth() !== selected.getMonth(),
           items: visibleAppointments.filter((appointment) =>
             sameDay(new Date(appointment.starts_at), date)
           ),
@@ -379,6 +402,8 @@ export default function AdminDashboard() {
         return {
           key: date.toISOString(),
           label: date.toLocaleDateString("pt-BR", { month: "long" }),
+          date,
+          muted: false,
           items: visibleAppointments.filter(
             (appointment) => new Date(appointment.starts_at).getMonth() === index
           ),
@@ -394,6 +419,8 @@ export default function AdminDashboard() {
           day: "2-digit",
           month: "long",
         }),
+        date: selected,
+        muted: false,
         items: visibleAppointments,
       },
     ];
@@ -492,6 +519,29 @@ export default function AdminDashboard() {
       expense.category?.toLowerCase().includes(term)
     );
   });
+
+  const customerSuggestions = matchingSuggestions(
+    customerSearch,
+    uniqueList(customers.flatMap((customer) => [customer.name, customer.phone]))
+  );
+
+  const cashSuggestions = matchingSuggestions(
+    cashSearch,
+    uniqueList(
+      filteredDoneAppointments.flatMap((appointment) => [
+        appointment.customers?.name,
+        appointment.services?.name,
+        appointment.payment_method,
+      ])
+    )
+  );
+
+  const expenseSuggestions = matchingSuggestions(
+    expenseSearch,
+    uniqueList(
+      expenses.flatMap((expense) => [expense.description, expense.category])
+    )
+  );
 
   async function upsertCustomerFromRequest(request: AppointmentRequest) {
     if (!supabase) return null;
@@ -633,6 +683,20 @@ export default function AdminDashboard() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function startAppointmentForDate(date: Date) {
+    setEditingAppointmentId(null);
+    setAppointmentForm({
+      ...emptyAppointment,
+      date: dateInputValue(date),
+    });
+    window.setTimeout(() => {
+      document.getElementById("appointment-form")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 0);
+  }
+
   async function deleteAppointment(id: string) {
     if (!supabase) return;
     if (!window.confirm("Excluir este agendamento?")) return;
@@ -769,6 +833,103 @@ export default function AdminDashboard() {
     await loadAll();
   }
 
+  const calendarPanel = (
+    <Panel title="Calendario" className="lg:col-span-2">
+      <p className="mb-4 text-sm font-medium text-nude-700">
+        Aqui fica a agenda principal. Escolha dia, semana, mes ou ano para ver
+        os horarios marcados.
+      </p>
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-wrap gap-2">
+          {(["day", "week", "month", "year"] as ViewMode[]).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setViewMode(mode)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold ${
+                viewMode === mode
+                  ? "bg-nude-900 text-white"
+                  : "border border-nude-300 bg-white text-nude-800 hover:bg-rose-50"
+              }`}
+            >
+              {mode === "day" && "Dia"}
+              {mode === "week" && "Semana"}
+              {mode === "month" && "Mes"}
+              {mode === "year" && "Ano"}
+            </button>
+          ))}
+        </div>
+        <Input
+          label="Data de referencia"
+          type="date"
+          value={selectedDate}
+          onChange={setSelectedDate}
+        />
+      </div>
+
+      {viewMode !== "day" && viewMode !== "year" && (
+        <div className="grid grid-cols-7 gap-2 text-center text-[11px] font-bold uppercase tracking-[0.08em] text-nude-700">
+          {["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"].map((day) => (
+            <span key={day}>{day}</span>
+          ))}
+        </div>
+      )}
+      <div
+        className={`grid gap-2 ${viewMode !== "day" && viewMode !== "year" ? "mt-2" : ""} ${
+          viewMode === "day"
+            ? "grid-cols-1"
+            : viewMode === "year"
+              ? "md:grid-cols-3 xl:grid-cols-4"
+              : "grid-cols-7"
+        }`}
+      >
+        {calendarBuckets.map((bucket) => (
+          <div
+            key={bucket.key}
+            className={`min-h-[132px] rounded-xl border p-2 text-left shadow-sm transition hover:border-rose-400 hover:bg-rose-50 ${
+              bucket.muted
+                ? "border-nude-200 bg-nude-100/70 text-nude-400"
+                : "border-nude-300 bg-white text-nude-900"
+            }`}
+          >
+            <span className="mb-2 flex items-center justify-between border-b border-nude-200 pb-1">
+              <span className="text-xs font-bold uppercase tracking-[0.08em]">
+                {bucket.label}
+              </span>
+              <button
+                type="button"
+                onClick={() => startAppointmentForDate(bucket.date)}
+                className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700 hover:bg-rose-200"
+                aria-label={`Criar agendamento em ${bucket.label}`}
+              >
+                +
+              </button>
+            </span>
+            <span className="block space-y-1.5">
+              {bucket.items.length === 0 ? (
+                <span className="block text-xs font-medium text-nude-500">
+                  Livre
+                </span>
+              ) : (
+                bucket.items.slice(0, 4).map((appointment) => (
+                  <CalendarEventChip
+                    key={appointment.id}
+                    appointment={appointment}
+                    onEdit={editAppointment}
+                  />
+                ))
+              )}
+              {bucket.items.length > 4 && (
+                <span className="block text-xs font-semibold text-nude-700">
+                  +{bucket.items.length - 4} horarios
+                </span>
+              )}
+            </span>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  );
+
   if (authLoading) {
     return <AdminShell>Carregando painel...</AdminShell>;
   }
@@ -867,13 +1028,13 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        <section className="mt-6 rounded-3xl border border-rose-100 bg-white p-5 shadow-sm">
+        <section className="mt-6 rounded-3xl border border-nude-300 bg-white p-5 shadow-md">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <h2 className="font-serif text-2xl font-semibold text-nude-900">
                 Hoje
               </h2>
-              <p className="mt-1 text-sm text-nude-600">
+              <p className="mt-1 text-sm font-medium text-nude-700">
                 Use esta area para acompanhar o dia. Atendimentos so entram no
                 caixa quando voce marca como Feito.
               </p>
@@ -920,8 +1081,8 @@ export default function AdminDashboard() {
               onClick={() => setTab(key as Tab)}
               className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
                 tab === key
-                  ? "bg-rose-500 text-white"
-                  : "border border-rose-100 bg-white text-nude-700 hover:bg-rose-50"
+                  ? "bg-rose-600 text-white"
+                  : "border border-nude-300 bg-white text-nude-800 hover:bg-rose-50"
               }`}
             >
               {label}
@@ -931,6 +1092,8 @@ export default function AdminDashboard() {
 
         {tab === "agenda" && (
           <section className="mt-6 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+            {calendarPanel}
+
             <Panel title="Solicitacoes pendentes">
               <div className="space-y-3">
                 {requests.filter((request) => request.status === "pending").length === 0 && (
@@ -981,6 +1144,7 @@ export default function AdminDashboard() {
               </div>
             </Panel>
 
+            <div id="appointment-form" className="scroll-mt-6" />
             <Panel title={editingAppointmentId ? "Editar agendamento" : "Novo agendamento"}>
               <p className="mb-4 text-sm text-nude-600">
                 Para entrar no caixa, o atendimento precisa estar marcado como
@@ -1110,70 +1274,6 @@ export default function AdminDashboard() {
               </form>
             </Panel>
 
-            <Panel title="Calendario" className="lg:col-span-2">
-              <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div className="flex flex-wrap gap-2">
-                  {(["day", "week", "month", "year"] as ViewMode[]).map((mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => setViewMode(mode)}
-                      className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                        viewMode === mode
-                          ? "bg-nude-900 text-white"
-                          : "border border-rose-100 bg-white text-nude-700"
-                      }`}
-                    >
-                      {mode === "day" && "Dia"}
-                      {mode === "week" && "Semana"}
-                      {mode === "month" && "Mes"}
-                      {mode === "year" && "Ano"}
-                    </button>
-                  ))}
-                </div>
-                <Input
-                  type="date"
-                  value={selectedDate}
-                  onChange={setSelectedDate}
-                />
-              </div>
-
-              <div
-                className={`grid gap-3 ${
-                  viewMode === "week"
-                    ? "lg:grid-cols-7"
-                    : "md:grid-cols-2 xl:grid-cols-3"
-                }`}
-              >
-                {visibleAppointments.length === 0 && (
-                  <Empty>Nenhum horario nesse periodo.</Empty>
-                )}
-                {calendarBuckets.map((bucket) => (
-                  <div
-                    key={bucket.key}
-                    className="min-h-[150px] rounded-2xl border border-rose-100 bg-white p-3"
-                  >
-                    <p className="mb-3 border-b border-rose-100 pb-2 text-xs font-semibold uppercase tracking-[0.12em] text-nude-500">
-                      {bucket.label}
-                    </p>
-                    <div className="space-y-3">
-                      {bucket.items.length === 0 ? (
-                        <p className="text-xs text-nude-400">Livre</p>
-                      ) : (
-                        bucket.items.map((appointment) => (
-                          <AppointmentCard
-                            key={appointment.id}
-                            appointment={appointment}
-                            onStatus={updateAppointmentStatus}
-                            onEdit={editAppointment}
-                            onDelete={deleteAppointment}
-                          />
-                        ))
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Panel>
           </section>
         )}
 
@@ -1233,6 +1333,7 @@ export default function AdminDashboard() {
                   value={customerSearch}
                   onChange={setCustomerSearch}
                   placeholder="Nome ou telefone"
+                  suggestions={customerSuggestions}
                 />
               </div>
               <div className="overflow-x-auto">
@@ -1417,6 +1518,7 @@ export default function AdminDashboard() {
                   value={cashSearch}
                   onChange={setCashSearch}
                   placeholder="Cliente, procedimento ou pagamento"
+                  suggestions={cashSuggestions}
                 />
               </div>
               <div className="mt-5 grid gap-4 md:grid-cols-5">
@@ -1465,6 +1567,10 @@ export default function AdminDashboard() {
         {tab === "gastos" && (
           <section className="mt-6 grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
             <Panel title={editingExpenseId ? "Editar gasto" : "Novo gasto"}>
+              <p className="mb-4 text-sm font-medium text-nude-700">
+                Use esta area para registrar custos do negocio, como materiais,
+                transporte ou aluguel. Esses valores entram no lucro estimado.
+              </p>
               <form onSubmit={createExpense} className="grid gap-3">
                 <Input
                   label="Descricao"
@@ -1534,6 +1640,7 @@ export default function AdminDashboard() {
                   value={expenseSearch}
                   onChange={setExpenseSearch}
                   placeholder="Descricao ou categoria"
+                  suggestions={expenseSuggestions}
                 />
               </div>
               <div className="space-y-3">
@@ -1578,7 +1685,7 @@ export default function AdminDashboard() {
 
 function AdminShell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-screen bg-nude-50 px-4 py-6 text-nude-800 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#f6f1ed] px-4 py-6 text-nude-900 sm:px-6 lg:px-8">
       {children}
     </main>
   );
@@ -1595,7 +1702,7 @@ function Panel({
 }) {
   return (
     <section
-      className={`rounded-3xl border border-rose-100 bg-white p-5 shadow-sm sm:p-6 ${className}`}
+      className={`rounded-3xl border border-nude-300 bg-white p-5 shadow-md sm:p-6 ${className}`}
     >
       <h2 className="mb-4 font-serif text-2xl font-semibold text-nude-900">
         {title}
@@ -1607,8 +1714,8 @@ function Panel({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-3xl border border-rose-100 bg-white p-5 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-[0.14em] text-nude-500">
+    <div className="rounded-3xl border border-nude-300 bg-white p-5 shadow-md">
+      <p className="text-xs font-bold uppercase tracking-[0.14em] text-nude-700">
         {label}
       </p>
       <p className="mt-2 break-words font-serif text-2xl font-semibold text-nude-900">
@@ -1620,8 +1727,8 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-rose-100 bg-nude-50 p-4">
-      <p className="text-xs font-medium text-nude-500">{label}</p>
+    <div className="rounded-2xl border border-nude-300 bg-nude-50 p-4">
+      <p className="text-xs font-bold text-nude-700">{label}</p>
       <p className="mt-1 font-serif text-2xl font-semibold text-nude-900">
         {value}
       </p>
@@ -1642,7 +1749,7 @@ function AppointmentCard({
 }) {
   const phone = appointment.customers?.phone;
   return (
-    <article className="rounded-2xl border border-rose-100 bg-nude-50 p-4">
+    <article className="rounded-2xl border border-nude-300 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-rose-600">
@@ -1654,11 +1761,11 @@ function AppointmentCard({
           <p className="mt-2 font-medium text-nude-900">
             {appointment.customers?.name ?? "Cliente"}
           </p>
-          <p className="text-sm text-nude-600">
+          <p className="text-sm text-nude-700">
             {appointment.services?.name ?? "Procedimento"} -{" "}
             {currency(appointment.price)}
           </p>
-          <p className="mt-1 text-xs text-nude-500">
+          <p className="mt-1 text-xs font-medium text-nude-600">
             {statusLabels[appointment.status]} ·{" "}
             {appointment.paid ? "Pago" : "Pagamento pendente"}
             {appointment.payment_method
@@ -1688,8 +1795,8 @@ function AppointmentCard({
               onClick={() => onStatus(appointment.id, status)}
               className={`rounded-full px-3 py-1 text-xs ${
                 appointment.status === status
-                  ? "bg-rose-500 text-white"
-                  : "border border-rose-100 bg-white text-nude-600"
+                  ? "bg-rose-600 text-white"
+                  : "border border-nude-300 bg-white text-nude-700"
               }`}
             >
               {statusLabels[status]}
@@ -1713,9 +1820,34 @@ function AppointmentCard({
   );
 }
 
+function CalendarEventChip({
+  appointment,
+  onEdit,
+}: {
+  appointment: Appointment;
+  onEdit: (appointment: Appointment) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onEdit(appointment)}
+      className="block w-full rounded-lg border border-rose-200 bg-rose-50 px-2 py-1.5 text-left text-[11px] font-semibold text-nude-900 shadow-sm hover:border-rose-400 hover:bg-white"
+      title="Clique para editar este agendamento"
+    >
+      <span className="block text-rose-700">{shortTime(appointment.starts_at)}</span>
+      <span className="block truncate">
+        {appointment.customers?.name ?? "Cliente"}
+      </span>
+      <span className="block truncate font-medium text-nude-600">
+        {appointment.services?.name ?? "Procedimento"}
+      </span>
+    </button>
+  );
+}
+
 function Empty({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-2xl border border-dashed border-rose-200 bg-rose-50/50 p-4 text-sm text-nude-500">
+    <p className="rounded-2xl border border-dashed border-nude-300 bg-rose-50 p-4 text-sm font-medium text-nude-600">
       {children}
     </p>
   );
@@ -1728,6 +1860,7 @@ function Input({
   type = "text",
   placeholder,
   required,
+  suggestions = [],
 }: {
   label?: string;
   value: string;
@@ -1735,11 +1868,12 @@ function Input({
   type?: string;
   placeholder?: string;
   required?: boolean;
+  suggestions?: string[];
 }) {
   return (
-    <label className="block">
+    <div className="relative block">
       {label && (
-        <span className="mb-1.5 block text-xs font-medium uppercase tracking-[0.08em] text-nude-500">
+        <span className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-nude-700">
           {label}
         </span>
       )}
@@ -1749,10 +1883,24 @@ function Input({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         required={required}
-        aria-label={!label ? placeholder : undefined}
-        className="w-full rounded-2xl border border-rose-100 bg-nude-50 px-4 py-3 text-sm outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+        aria-label={label ?? placeholder}
+        className="w-full rounded-2xl border border-nude-300 bg-white px-4 py-3 text-sm text-nude-950 outline-none transition placeholder:text-nude-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
       />
-    </label>
+      {suggestions.length > 0 && (
+        <span className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-2xl border border-nude-300 bg-white shadow-lg">
+          {suggestions.map((suggestion) => (
+            <button
+              type="button"
+              key={suggestion}
+              onClick={() => onChange(suggestion)}
+              className="block w-full px-4 py-2.5 text-left text-sm font-medium text-nude-800 hover:bg-rose-50"
+            >
+              {suggestion}
+            </button>
+          ))}
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -1772,7 +1920,7 @@ function Select({
   return (
     <label className="block">
       {label && (
-        <span className="mb-1.5 block text-xs font-medium uppercase tracking-[0.08em] text-nude-500">
+        <span className="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-nude-700">
           {label}
         </span>
       )}
@@ -1781,7 +1929,7 @@ function Select({
         onChange={(event) => onChange(event.target.value)}
         required={required}
         aria-label={!label ? "Selecao" : undefined}
-        className="w-full rounded-2xl border border-rose-100 bg-nude-50 px-4 py-3 text-sm outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+        className="w-full rounded-2xl border border-nude-300 bg-white px-4 py-3 text-sm text-nude-950 outline-none transition focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
       >
         {children}
       </select>
@@ -1791,7 +1939,7 @@ function Select({
 
 function SubmitButton({ children }: { children: React.ReactNode }) {
   return (
-    <button className="rounded-full bg-rose-500 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-rose-600">
+    <button className="rounded-full bg-rose-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700">
       {children}
     </button>
   );
@@ -1813,7 +1961,7 @@ function RangePicker({
           className={`rounded-full px-3 py-1.5 text-xs font-medium ${
             range === key
               ? "bg-nude-900 text-white"
-              : "border border-rose-100 bg-white text-nude-700 hover:bg-rose-50"
+              : "border border-nude-300 bg-white text-nude-800 hover:bg-rose-50"
           }`}
         >
           {rangeLabels[key]}
