@@ -9,6 +9,7 @@ type FormState = {
   name: string;
   phone: string;
   birthday: string;
+  leadSource: string;
   serviceId: string;
   preferredDate: string;
   preferredTime: string;
@@ -19,6 +20,7 @@ const initialForm: FormState = {
   name: "",
   phone: "",
   birthday: "",
+  leadSource: "",
   serviceId: "",
   preferredDate: "",
   preferredTime: "",
@@ -30,6 +32,18 @@ const fallbackServices = [
   { id: "fallback-egipcio", name: "Volume egipcio", price: 130 },
   { id: "fallback-fox", name: "Fox eyes", price: 150 },
   { id: "fallback-design", name: "Design personalizado", price: 30 },
+];
+
+const leadSourceOptions = [
+  { value: "site", label: "Site" },
+  { value: "instagram", label: "Instagram" },
+  { value: "indicacao", label: "Indicacao / boca a boca" },
+  { value: "publicacao_social_media", label: "Publicacao do social media" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "google", label: "Google / Maps" },
+  { value: "cliente_antiga", label: "Cliente antiga" },
+  { value: "evento", label: "Evento / acao local" },
+  { value: "outro", label: "Outro" },
 ];
 
 function money(value: number) {
@@ -108,6 +122,7 @@ export default function ScheduleRequestForm() {
         customer_name: form.name.trim(),
         customer_phone: form.phone.trim(),
         customer_birthday: form.birthday || null,
+        lead_source: form.leadSource || null,
         service_id: isFallback ? null : form.serviceId,
         service_name: selectedService.name,
         preferred_date: form.preferredDate,
@@ -171,6 +186,24 @@ export default function ScheduleRequestForm() {
             }
             className="mt-1.5 w-full rounded-2xl border border-rose-100 bg-nude-50 px-4 py-3 text-nude-900 outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
           />
+        </label>
+
+        <label className="sm:col-span-2">
+          <span className="text-sm font-medium text-nude-800">Como conheceu?</span>
+          <select
+            value={form.leadSource}
+            onChange={(event) =>
+              setForm({ ...form, leadSource: event.target.value })
+            }
+            className="mt-1.5 w-full rounded-2xl border border-rose-100 bg-nude-50 px-4 py-3 text-nude-900 outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+          >
+            <option value="">Prefiro nao informar</option>
+            {leadSourceOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="sm:col-span-2">

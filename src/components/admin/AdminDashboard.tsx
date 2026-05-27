@@ -58,12 +58,44 @@ const paymentLabels: Record<PaymentMethod, string> = {
   outro: "Outro",
 };
 
+const leadSourceLabels: Record<string, string> = {
+  site: "Site",
+  instagram: "Instagram",
+  indicacao: "Indicacao / boca a boca",
+  publicacao_social_media: "Publicacao social media",
+  whatsapp: "WhatsApp",
+  google: "Google / Maps",
+  cliente_antiga: "Cliente antiga",
+  evento: "Evento / acao local",
+  trafego_pago: "Trafego pago",
+  panfleto: "Panfleto / cartao",
+  fachada: "Fachada / passou na frente",
+  parceria: "Parceria",
+  outro: "Outro",
+};
+
+const expenseCategories = [
+  "Materiais",
+  "Cola e produtos de cilios",
+  "Descartaveis",
+  "Sobrancelhas",
+  "Marketing",
+  "Comissao social media",
+  "Aluguel",
+  "Transporte",
+  "Manutencao",
+  "Cursos",
+  "Taxas",
+  "Outros",
+];
+
 const emptyAppointment = {
   customerId: "",
   serviceId: "",
   date: "",
   time: "",
   price: "",
+  status: "confirmed" as AppointmentStatus,
   paymentMethod: "pix",
   paid: false,
   notes: "",
@@ -203,6 +235,8 @@ export default function AdminDashboard() {
   const [customerSearch, setCustomerSearch] = useState("");
   const [cashSearch, setCashSearch] = useState("");
   const [expenseSearch, setExpenseSearch] = useState("");
+  const [expenseRange, setExpenseRange] = useState<RangeKey>("month");
+  const [expenseCategoryFilter, setExpenseCategoryFilter] = useState("all");
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -215,6 +249,7 @@ export default function AdminDashboard() {
     name: "",
     phone: "",
     birthday: "",
+    leadSource: "",
     notes: "",
   });
   const [serviceForm, setServiceForm] = useState({
@@ -547,7 +582,8 @@ export default function AdminDashboard() {
     if (!term) return true;
     return (
       customer.name.toLowerCase().includes(term) ||
-      customer.phone.toLowerCase().includes(term)
+      customer.phone.toLowerCase().includes(term) ||
+      leadSourceLabels[customer.lead_source ?? ""]?.toLowerCase().includes(term)
     );
   });
 
@@ -562,6 +598,14 @@ export default function AdminDashboard() {
   });
 
   const filteredExpenseList = expenses.filter((expense) => {
+    const start = rangeStart(expenseRange);
+    if (start && new Date(`${expense.spent_at}T00:00:00`) < start) return false;
+    if (
+      expenseCategoryFilter !== "all" &&
+      (expense.category ?? "Sem categoria") !== expenseCategoryFilter
+    ) {
+      return false;
+    }
     const term = expenseSearch.toLowerCase().trim();
     if (!term) return true;
     return (
@@ -572,7 +616,13 @@ export default function AdminDashboard() {
 
   const customerSuggestions = matchingSuggestions(
     customerSearch,
-    uniqueList(customers.flatMap((customer) => [customer.name, customer.phone]))
+    uniqueList(
+      customers.flatMap((customer) => [
+        customer.name,
+        customer.phone,
+        leadSourceLabels[customer.lead_source ?? ""],
+      ])
+    )
   );
 
   const cashSuggestions = matchingSuggestions(
@@ -593,6 +643,22 @@ export default function AdminDashboard() {
     )
   );
 
+  const expenseCategoryTotals = useMemo(() => {
+    const totals = new Map<string, number>();
+    filteredExpenseList.forEach((expense) => {
+      const category = expense.category ?? "Sem categoria";
+      totals.set(category, (totals.get(category) ?? 0) + Number(expense.amount || 0));
+    });
+    return Array.from(totals.entries())
+      .map(([category, total]) => ({ category, total }))
+      .sort((a, b) => b.total - a.total);
+  }, [filteredExpenseList]);
+
+  const filteredExpenseTotal = filteredExpenseList.reduce(
+    (sum, expense) => sum + Number(expense.amount || 0),
+    0
+  );
+
   async function upsertCustomerFromRequest(request: AppointmentRequest) {
     if (!supabase) return null;
     const phone = normalizePhone(request.customer_phone) || request.customer_phone;
@@ -611,6 +677,7 @@ export default function AdminDashboard() {
         name: request.customer_name,
         phone,
         birthday: request.customer_birthday,
+        lead_source: request.lead_source,
         notes: request.notes,
       })
       .select()
@@ -696,7 +763,7 @@ export default function AdminDashboard() {
       service_id: appointmentForm.serviceId || null,
       starts_at: start.toISOString(),
       ends_at: end.toISOString(),
-      status: "confirmed",
+      status: appointmentForm.status,
       price: Number(appointmentForm.price || service?.price || 0),
       payment_method: appointmentForm.paymentMethod || null,
       paid: appointmentForm.paid,
@@ -726,6 +793,7 @@ export default function AdminDashboard() {
       date: appointment.starts_at.slice(0, 10),
       time: new Date(appointment.starts_at).toTimeString().slice(0, 5),
       price: String(appointment.price),
+      status: appointment.status,
       paymentMethod: appointment.payment_method ?? "pix",
       paid: appointment.paid,
       notes: appointment.notes ?? "",
@@ -767,13 +835,20 @@ export default function AdminDashboard() {
       name: customerForm.name.trim(),
       phone: normalizePhone(customerForm.phone) || customerForm.phone.trim(),
       birthday: customerForm.birthday || null,
+      lead_source: customerForm.leadSource || null,
       notes: customerForm.notes.trim() || null,
     };
     const { error } = editingCustomerId
       ? await supabase.from("customers").update(payload).eq("id", editingCustomerId)
       : await supabase.from("customers").insert(payload);
     if (!error) {
-      setCustomerForm({ name: "", phone: "", birthday: "", notes: "" });
+      setCustomerForm({
+        name: "",
+        phone: "",
+        birthday: "",
+        leadSource: "",
+        notes: "",
+      });
       setEditingCustomerId(null);
       await loadAll();
     }
@@ -785,6 +860,7 @@ export default function AdminDashboard() {
       name: customer.name,
       phone: customer.phone,
       birthday: customer.birthday ?? "",
+      leadSource: customer.lead_source ?? "",
       notes: customer.notes ?? "",
     });
   }
@@ -1216,6 +1292,11 @@ export default function AdminDashboard() {
                             {request.service_name ?? request.services?.name} em{" "}
                             {request.preferred_date} as {request.preferred_time}
                           </p>
+                          {request.lead_source && (
+                            <p className="mt-1 text-xs font-semibold text-rose-700">
+                              Origem: {leadSourceLabels[request.lead_source] ?? request.lead_source}
+                            </p>
+                          )}
                           {request.notes && (
                             <p className="mt-1 text-sm text-nude-500">
                               {request.notes}
@@ -1246,7 +1327,8 @@ export default function AdminDashboard() {
             <Panel title={editingAppointmentId ? "Editar agendamento" : "Novo agendamento"}>
               <p className="mb-4 text-sm text-nude-600">
                 Para entrar no caixa, o atendimento precisa estar marcado como
-                Feito. Use Pago para controlar se o dinheiro ja entrou.
+                Feito. Para cadastrar atendimento antigo, escolha uma data
+                passada e salve com status Feito.
               </p>
               <form onSubmit={createAppointment} className="grid gap-3">
                 <Select
@@ -1332,6 +1414,24 @@ export default function AdminDashboard() {
                     </option>
                   ))}
                 </Select>
+                <Select
+                  label="Status"
+                  value={appointmentForm.status}
+                  onChange={(value) =>
+                    setAppointmentForm({
+                      ...appointmentForm,
+                      status: value as AppointmentStatus,
+                    })
+                  }
+                >
+                  {(["confirmed", "done", "cancelled", "no_show"] as AppointmentStatus[]).map(
+                    (status) => (
+                      <option key={status} value={status}>
+                        {statusLabels[status]}
+                      </option>
+                    )
+                  )}
+                </Select>
                 <label className="flex items-center gap-2 rounded-2xl border border-rose-100 bg-nude-50 px-4 py-3 text-sm text-nude-700">
                   <input
                     type="checkbox"
@@ -1401,6 +1501,20 @@ export default function AdminDashboard() {
                     setCustomerForm({ ...customerForm, birthday: value })
                   }
                 />
+                <Select
+                  label="Origem da cliente"
+                  value={customerForm.leadSource}
+                  onChange={(value) =>
+                    setCustomerForm({ ...customerForm, leadSource: value })
+                  }
+                >
+                  <option value="">Nao informado</option>
+                  {Object.entries(leadSourceLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </Select>
                 <Input
                   label="Observacoes"
                   value={customerForm.notes}
@@ -1415,7 +1529,13 @@ export default function AdminDashboard() {
                     type="button"
                     onClick={() => {
                       setEditingCustomerId(null);
-                      setCustomerForm({ name: "", phone: "", birthday: "", notes: "" });
+                      setCustomerForm({
+                        name: "",
+                        phone: "",
+                        birthday: "",
+                        leadSource: "",
+                        notes: "",
+                      });
                     }}
                     className="rounded-full border border-rose-200 px-5 py-3 text-sm font-medium text-nude-700"
                   >
@@ -1435,12 +1555,13 @@ export default function AdminDashboard() {
                 />
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[620px] text-left text-sm">
+                <table className="w-full min-w-[760px] text-left text-sm">
                   <thead className="text-xs uppercase tracking-[0.12em] text-nude-500">
                     <tr>
                       <th scope="col" className="py-2">Cliente</th>
                       <th scope="col">Telefone</th>
                       <th scope="col">Aniversario</th>
+                      <th scope="col">Origem</th>
                       <th scope="col">Total gasto</th>
                       <th scope="col">Atendimentos</th>
                       <th scope="col">Acoes</th>
@@ -1464,6 +1585,7 @@ export default function AdminDashboard() {
                           </td>
                           <td>{customer.phone}</td>
                           <td>{customer.birthday ?? "-"}</td>
+                          <td>{leadSourceLabels[customer.lead_source ?? ""] ?? "-"}</td>
                           <td>{currency(total)}</td>
                           <td>{done.length}</td>
                           <td>
@@ -1687,14 +1809,20 @@ export default function AdminDashboard() {
                   placeholder="Valor"
                   required
                 />
-                <Input
+                <Select
                   label="Categoria"
                   value={expenseForm.category}
                   onChange={(value) =>
                     setExpenseForm({ ...expenseForm, category: value })
                   }
-                  placeholder="Categoria"
-                />
+                >
+                  <option value="">Selecione uma categoria</option>
+                  {expenseCategories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </Select>
                 <Input
                   label="Data"
                   type="date"
@@ -1732,7 +1860,7 @@ export default function AdminDashboard() {
               </form>
             </Panel>
             <Panel title="Gastos cadastrados">
-              <div className="mb-4">
+              <div className="mb-4 grid gap-3 md:grid-cols-3">
                 <Input
                   label="Buscar gasto"
                   value={expenseSearch}
@@ -1740,6 +1868,71 @@ export default function AdminDashboard() {
                   placeholder="Descricao ou categoria"
                   suggestions={expenseSuggestions}
                 />
+                <Select
+                  label="Periodo"
+                  value={expenseRange}
+                  onChange={(value) => setExpenseRange(value as RangeKey)}
+                >
+                  {(Object.keys(rangeLabels) as RangeKey[]).map((key) => (
+                    <option key={key} value={key}>
+                      {rangeLabels[key]}
+                    </option>
+                  ))}
+                </Select>
+                <Select
+                  label="Categoria"
+                  value={expenseCategoryFilter}
+                  onChange={setExpenseCategoryFilter}
+                >
+                  <option value="all">Todas</option>
+                  {uniqueList(expenses.map((expense) => expense.category ?? "Sem categoria")).map(
+                    (category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    )
+                  )}
+                </Select>
+              </div>
+
+              <div className="mb-5 rounded-2xl border border-nude-300 bg-nude-50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-bold text-nude-900">
+                    Resumo dos gastos
+                  </p>
+                  <span className="font-serif text-xl font-semibold text-red-600">
+                    {currency(filteredExpenseTotal)}
+                  </span>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {expenseCategoryTotals.length === 0 && (
+                    <p className="text-sm font-medium text-nude-600">
+                      Nenhum gasto nesse filtro.
+                    </p>
+                  )}
+                  {expenseCategoryTotals.map((item) => {
+                    const percent =
+                      filteredExpenseTotal > 0
+                        ? Math.round((item.total / filteredExpenseTotal) * 100)
+                        : 0;
+                    return (
+                      <div key={item.category}>
+                        <div className="mb-1 flex items-center justify-between gap-3 text-xs font-semibold text-nude-700">
+                          <span>{item.category}</span>
+                          <span>
+                            {currency(item.total)} · {percent}%
+                          </span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-white">
+                          <div
+                            className="h-full rounded-full bg-rose-500"
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
               <div className="space-y-3">
                 {filteredExpenseList.map((expense) => (

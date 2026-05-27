@@ -12,6 +12,7 @@ export type Customer = {
   name: string;
   phone: string;
   birthday: string | null;
+  lead_source: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -50,6 +51,7 @@ export type AppointmentRequest = {
   customer_name: string;
   customer_phone: string;
   customer_birthday: string | null;
+  lead_source: string | null;
   service_id: string | null;
   service_name: string | null;
   preferred_date: string;
