@@ -28,6 +28,14 @@ type RangeKey =
   | "all";
 
 type PaymentMethod = "pix" | "dinheiro" | "cartao" | "outro";
+type ToastKind = "success" | "error" | "info";
+
+type ToastMessage = {
+  id: number;
+  kind: ToastKind;
+  title: string;
+  description?: string;
+};
 
 const statusLabels: Record<AppointmentStatus, string> = {
   requested: "Solicitado",
@@ -232,6 +240,7 @@ export default function AdminDashboard() {
   });
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [customerSearch, setCustomerSearch] = useState("");
   const [cashSearch, setCashSearch] = useState("");
   const [expenseSearch, setExpenseSearch] = useState("");
@@ -269,6 +278,25 @@ export default function AdminDashboard() {
   const [editingCustomerId, setEditingCustomerId] = useState<string | null>(null);
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+
+  function showToast(
+    kind: ToastKind,
+    title: string,
+    description?: string
+  ) {
+    const id = Date.now() + Math.random();
+    setToasts((current) => [
+      ...current.slice(-2),
+      { id, kind, title, description },
+    ]);
+    window.setTimeout(() => {
+      setToasts((current) => current.filter((toast) => toast.id !== id));
+    }, 4200);
+  }
+
+  function dismissToast(id: number) {
+    setToasts((current) => current.filter((toast) => toast.id !== id));
+  }
 
   useEffect(() => {
     if (!supabase) {
@@ -696,7 +724,11 @@ export default function AdminDashboard() {
     const end = addMinutes(start, service?.duration_minutes ?? 90);
 
     if (hasScheduleConflict(start, end)) {
-      setNotice("Ja existe um agendamento nesse horario. Escolha outro horario antes de aprovar.");
+      showToast(
+        "error",
+        "Horario ocupado",
+        "Ja existe um atendimento confirmado nesse horario. Escolha outro antes de aprovar."
+      );
       return;
     }
 
@@ -723,16 +755,32 @@ export default function AdminDashboard() {
         .eq("id", request.id);
       if (requestError) throw requestError;
 
-      setNotice("Solicitacao aprovada e agendamento criado.");
+      showToast(
+        "success",
+        "Solicitacao aprovada",
+        "O horario entrou na agenda como confirmado."
+      );
       await loadAll();
     } catch {
-      setNotice("Nao foi possivel aprovar essa solicitacao.");
+      showToast(
+        "error",
+        "Nao foi possivel aprovar",
+        "Confira se o procedimento ainda existe e tente novamente."
+      );
     }
   }
 
   async function rejectRequest(id: string) {
     if (!supabase) return;
-    await supabase.from("appointment_requests").update({ status: "rejected" }).eq("id", id);
+    const { error } = await supabase
+      .from("appointment_requests")
+      .update({ status: "rejected" })
+      .eq("id", id);
+    if (error) {
+      showToast("error", "Nao foi possivel recusar", "Tente novamente em instantes.");
+      return;
+    }
+    showToast("info", "Solicitacao recusada", "Ela saiu da lista de pendentes.");
     await loadAll();
   }
 
@@ -754,7 +802,11 @@ export default function AdminDashboard() {
     const end = addMinutes(start, service?.duration_minutes ?? 90);
 
     if (hasScheduleConflict(start, end, editingAppointmentId ?? undefined)) {
-      setNotice("Esse horario conflita com outro atendimento confirmado.");
+      showToast(
+        "error",
+        "Conflito de horario",
+        "Esse periodo bate com outro atendimento confirmado."
+      );
       return;
     }
 
@@ -780,7 +832,20 @@ export default function AdminDashboard() {
     if (!error) {
       setAppointmentForm(emptyAppointment);
       setEditingAppointmentId(null);
+      showToast(
+        "success",
+        editingAppointmentId ? "Agendamento atualizado" : "Agendamento criado",
+        appointmentForm.status === "done"
+          ? "Como esta marcado como Feito, ele entra no caixa."
+          : "O horario ficou salvo na agenda."
+      );
       await loadAll();
+    } else {
+      showToast(
+        "error",
+        "Nao consegui salvar",
+        "Revise cliente, procedimento, data e valor antes de tentar de novo."
+      );
     }
   }
 
@@ -818,13 +883,29 @@ export default function AdminDashboard() {
   async function deleteAppointment(id: string) {
     if (!supabase) return;
     if (!window.confirm("Excluir este agendamento?")) return;
-    await supabase.from("appointments").delete().eq("id", id);
+    const { error } = await supabase.from("appointments").delete().eq("id", id);
+    if (error) {
+      showToast("error", "Nao foi possivel excluir", "Tente novamente.");
+      return;
+    }
+    showToast("info", "Agendamento excluido", "Ele saiu da agenda.");
     await loadAll();
   }
 
   async function updateAppointmentStatus(id: string, status: AppointmentStatus) {
     if (!supabase) return;
-    await supabase.from("appointments").update({ status }).eq("id", id);
+    const { error } = await supabase.from("appointments").update({ status }).eq("id", id);
+    if (error) {
+      showToast("error", "Status nao atualizado", "Tente novamente.");
+      return;
+    }
+    showToast(
+      "success",
+      `Status: ${statusLabels[status]}`,
+      status === "done"
+        ? "Esse atendimento agora entra no faturamento."
+        : "A agenda foi atualizada."
+    );
     await loadAll();
   }
 
@@ -850,7 +931,18 @@ export default function AdminDashboard() {
         notes: "",
       });
       setEditingCustomerId(null);
+      showToast(
+        "success",
+        editingCustomerId ? "Cliente atualizada" : "Cliente cadastrada",
+        "Os dados ficaram salvos no painel."
+      );
       await loadAll();
+    } else {
+      showToast(
+        "error",
+        "Nao consegui salvar a cliente",
+        "Confira se o telefone nao esta duplicado."
+      );
     }
   }
 
@@ -868,7 +960,12 @@ export default function AdminDashboard() {
   async function deleteCustomer(id: string) {
     if (!supabase) return;
     if (!window.confirm("Excluir esta cliente e o historico dela?")) return;
-    await supabase.from("customers").delete().eq("id", id);
+    const { error } = await supabase.from("customers").delete().eq("id", id);
+    if (error) {
+      showToast("error", "Cliente nao excluida", "Tente novamente.");
+      return;
+    }
+    showToast("info", "Cliente excluida", "O historico vinculado tambem foi removido.");
     await loadAll();
   }
 
@@ -888,7 +985,18 @@ export default function AdminDashboard() {
     if (!error) {
       setServiceForm({ name: "", category: "", duration: "90", price: "" });
       setEditingServiceId(null);
+      showToast(
+        "success",
+        editingServiceId ? "Procedimento atualizado" : "Procedimento criado",
+        "Ele ja pode ser usado em agendamentos."
+      );
       await loadAll();
+    } else {
+      showToast(
+        "error",
+        "Nao consegui salvar o procedimento",
+        "Pode existir outro procedimento com o mesmo nome."
+      );
     }
   }
 
@@ -904,14 +1012,33 @@ export default function AdminDashboard() {
 
   async function toggleService(service: Service) {
     if (!supabase) return;
-    await supabase.from("services").update({ active: !service.active }).eq("id", service.id);
+    const { error } = await supabase
+      .from("services")
+      .update({ active: !service.active })
+      .eq("id", service.id);
+    if (error) {
+      showToast("error", "Nao consegui alterar", "Tente novamente.");
+      return;
+    }
+    showToast(
+      "success",
+      service.active ? "Procedimento inativado" : "Procedimento ativado",
+      service.active
+        ? "Ele nao aparece mais para novas solicitacoes."
+        : "Ele voltou a aparecer para novas solicitacoes."
+    );
     await loadAll();
   }
 
   async function deleteService(id: string) {
     if (!supabase) return;
     if (!window.confirm("Excluir este procedimento? Agendamentos antigos ficarao sem procedimento vinculado.")) return;
-    await supabase.from("services").delete().eq("id", id);
+    const { error } = await supabase.from("services").delete().eq("id", id);
+    if (error) {
+      showToast("error", "Procedimento nao excluido", "Tente novamente.");
+      return;
+    }
+    showToast("info", "Procedimento excluido", "Agendamentos antigos continuam no historico.");
     await loadAll();
   }
 
@@ -937,7 +1064,18 @@ export default function AdminDashboard() {
         notes: "",
       });
       setEditingExpenseId(null);
+      showToast(
+        "success",
+        editingExpenseId ? "Gasto atualizado" : "Gasto registrado",
+        "O valor ja entrou no resumo de gastos."
+      );
       await loadAll();
+    } else {
+      showToast(
+        "error",
+        "Nao consegui salvar o gasto",
+        "Confira descricao, valor e data."
+      );
     }
   }
 
@@ -955,7 +1093,12 @@ export default function AdminDashboard() {
   async function deleteExpense(id: string) {
     if (!supabase) return;
     if (!window.confirm("Excluir este gasto?")) return;
-    await supabase.from("expenses").delete().eq("id", id);
+    const { error } = await supabase.from("expenses").delete().eq("id", id);
+    if (error) {
+      showToast("error", "Gasto nao excluido", "Tente novamente.");
+      return;
+    }
+    showToast("info", "Gasto excluido", "O resumo de gastos foi atualizado.");
     await loadAll();
   }
 
@@ -1122,6 +1265,7 @@ export default function AdminDashboard() {
 
   return (
     <AdminShell>
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
       <div className="mx-auto max-w-7xl">
         <header className="flex flex-col gap-4 border-b border-rose-100 pb-5 md:flex-row md:items-center md:justify-between">
           <div>
@@ -1979,6 +2123,76 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     <main className="min-h-screen bg-[#f6f1ed] px-4 py-6 text-nude-900 sm:px-6 lg:px-8">
       {children}
     </main>
+  );
+}
+
+function ToastStack({
+  toasts,
+  onDismiss,
+}: {
+  toasts: ToastMessage[];
+  onDismiss: (id: number) => void;
+}) {
+  if (toasts.length === 0) return null;
+
+  return (
+    <div
+      className="fixed inset-x-3 bottom-4 z-[200] space-y-2 sm:bottom-auto sm:left-auto sm:right-4 sm:top-4 sm:w-full sm:max-w-sm"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      {toasts.map((toast) => (
+        <div
+          key={toast.id}
+          className="overflow-hidden rounded-2xl border border-nude-300 bg-white shadow-xl shadow-nude-900/10"
+          role={toast.kind === "error" ? "alert" : "status"}
+        >
+          <div
+            className={`h-1.5 ${
+              toast.kind === "success"
+                ? "bg-emerald-500"
+                : toast.kind === "error"
+                  ? "bg-rose-600"
+                  : "bg-nude-700"
+            }`}
+          />
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex gap-3 p-4 pr-1">
+              <span
+                className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                  toast.kind === "success"
+                    ? "bg-emerald-50 text-emerald-700"
+                    : toast.kind === "error"
+                      ? "bg-rose-50 text-rose-700"
+                      : "bg-nude-100 text-nude-800"
+                }`}
+                aria-hidden
+              >
+                {toast.kind === "success" && "✓"}
+                {toast.kind === "error" && "!"}
+                {toast.kind === "info" && "i"}
+              </span>
+              <div>
+                <p className="text-sm font-bold text-nude-950">{toast.title}</p>
+                {toast.description && (
+                  <p className="mt-1 text-sm font-medium leading-snug text-nude-700">
+                    {toast.description}
+                  </p>
+                )}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => onDismiss(toast.id)}
+              className="mr-3 mt-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-nude-200 text-xs font-bold text-nude-600 hover:bg-nude-50"
+              aria-label="Fechar aviso"
+            >
+              x
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
