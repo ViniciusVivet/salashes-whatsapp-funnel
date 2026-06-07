@@ -132,6 +132,24 @@ function ServiceCard({
 
 export default function Services() {
   const [galleryService, setGalleryService] = useState<ServiceItem | null>(null);
+  const [activeCategoryId, setActiveCategoryId] = useState(servicesData[0]?.id);
+  const activeCategoryIndex = Math.max(
+    servicesData.findIndex((category) => category.id === activeCategoryId),
+    0
+  );
+  const activeCategory = servicesData[activeCategoryIndex] ?? servicesData[0];
+  const hasMultipleCategories = servicesData.length > 1;
+
+  function selectAdjacentCategory(direction: -1 | 1) {
+    if (!hasMultipleCategories) {
+      return;
+    }
+
+    const nextIndex =
+      (activeCategoryIndex + direction + servicesData.length) %
+      servicesData.length;
+    setActiveCategoryId(servicesData[nextIndex].id);
+  }
 
   return (
     <section
@@ -144,35 +162,108 @@ export default function Services() {
           subtitle="Procedimentos pensados para valorizar seu olhar"
         />
 
-        <div className="space-y-12 md:space-y-16">
-          {servicesData.map((category, catIndex) => (
-            <div key={category.id} className="relative">
-              <div
-                className="flex items-center gap-4 mb-8 md:mb-10"
-                aria-hidden
-              >
-                <span className="h-px flex-1 bg-gradient-to-r from-transparent via-rose-200/60 to-transparent" />
-                <span className="text-[11px] font-medium uppercase tracking-[0.2em] text-nude-400">
-                  {category.title}
-                </span>
-                <span className="h-px flex-1 bg-gradient-to-r from-transparent via-rose-200/60 to-transparent" />
+        <div className="relative">
+          <div className="mb-8 md:mb-10">
+            <div
+              className="flex gap-3 overflow-x-auto rounded-full border border-rose-100/70 bg-white/65 p-2 shadow-sm backdrop-blur-sm"
+              role="tablist"
+              aria-label="Categorias de servicos"
+            >
+              {servicesData.map((category) => {
+                const isActive = category.id === activeCategory.id;
+
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls={`servicos-${category.id}`}
+                    onClick={() => setActiveCategoryId(category.id)}
+                    className={cn(
+                      "min-w-[72%] sm:min-w-0 sm:flex-1 rounded-full px-5 py-3 text-left transition-all duration-300",
+                      "focus-visible:outline-rose-400",
+                      isActive
+                        ? "bg-nude-950 text-white shadow-md shadow-nude-900/10"
+                        : "bg-white/70 text-nude-700 hover:bg-rose-50 hover:text-nude-950"
+                    )}
+                  >
+                    <span className="block font-serif text-xl font-semibold leading-tight">
+                      {category.title}
+                    </span>
+                    {category.subtitle && (
+                      <span
+                        className={cn(
+                          "mt-1 block text-xs leading-snug",
+                          isActive ? "text-rose-100" : "text-nude-500"
+                        )}
+                      >
+                        {category.subtitle}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div
+            id={`servicos-${activeCategory.id}`}
+            role="tabpanel"
+            aria-live="polite"
+            className="animate-fade-in"
+          >
+            <div className="mb-7 flex flex-col gap-4 md:mb-9 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-rose-500">
+                  Categoria
+                </p>
+                <h3 className="mt-2 font-serif text-3xl font-semibold leading-tight text-nude-900 md:text-4xl">
+                  {activeCategory.title}
+                </h3>
+                {activeCategory.subtitle && (
+                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-nude-600 md:text-base">
+                    {activeCategory.subtitle}
+                  </p>
+                )}
               </div>
 
-              <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-5 md:gap-6">
-                {category.services.map((service) => (
-                  <ServiceCard
-                    key={service.id}
-                    service={service}
-                    onOpenGallery={
-                      service.coverImage || (service.galleryImages?.length ?? 0) > 0
-                        ? setGalleryService
-                        : undefined
-                    }
-                  />
-                ))}
-              </div>
+              {hasMultipleCategories && (
+                <div className="flex items-center gap-2 self-start md:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => selectAdjacentCategory(-1)}
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-rose-100 bg-white/80 text-xl text-nude-700 shadow-sm transition-colors hover:bg-rose-50 hover:text-rose-700"
+                    aria-label="Categoria anterior"
+                  >
+                    <span aria-hidden>&larr;</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => selectAdjacentCategory(1)}
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-rose-100 bg-white/80 text-xl text-nude-700 shadow-sm transition-colors hover:bg-rose-50 hover:text-rose-700"
+                    aria-label="Proxima categoria"
+                  >
+                    <span aria-hidden>&rarr;</span>
+                  </button>
+                </div>
+              )}
             </div>
-          ))}
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-5 md:gap-6">
+              {activeCategory.services.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  service={service}
+                  onOpenGallery={
+                    service.coverImage || (service.galleryImages?.length ?? 0) > 0
+                      ? setGalleryService
+                      : undefined
+                  }
+                />
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="mt-14 md:mt-16 text-center">
