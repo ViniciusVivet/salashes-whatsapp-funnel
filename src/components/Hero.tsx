@@ -23,7 +23,7 @@ export default function Hero() {
           Seu olhar em destaque, com cuidado que faz diferença
         </h1>
         <p className="mt-6 sm:mt-7 text-base sm:text-lg md:text-xl text-nude-600 max-w-xl mx-auto leading-relaxed animate-fade-in-up">
-          Atendimento personalizado em cílios e sobrancelhas na zona leste de SP. Aqui o foco é você: combinamos o procedimento certo e um resultado que você vai amar.
+          Especialista em extensão de cílios e tendências gringas, realço ainda mais a sua beleza com um toque único e especial.
         </p>
         <div className="mt-8 sm:mt-10 flex flex-col-reverse sm:flex-row flex-wrap gap-3 sm:gap-3 justify-center items-center animate-fade-in-up">
           <CtaWhatsApp variant="primary" className="w-full sm:w-auto">
