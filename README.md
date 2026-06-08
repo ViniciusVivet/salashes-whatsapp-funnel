@@ -23,6 +23,7 @@ Site one page da **Sabrina Lashes** (Sabrina Silva - Lash & Brow Designer), foca
    NEXT_PUBLIC_SUPABASE_URL=
    NEXT_PUBLIC_SUPABASE_ANON_KEY=
    NEXT_PUBLIC_SITE_URL=
+   CRON_SECRET=
    ```
 
 3. Inicie o servidor de desenvolvimento:
@@ -88,6 +89,7 @@ O projeto tem:
    NEXT_PUBLIC_SUPABASE_URL=
    NEXT_PUBLIC_SUPABASE_ANON_KEY=
    NEXT_PUBLIC_SITE_URL=
+   CRON_SECRET=
    ```
 
 6. Depois de alterar variaveis na Vercel, faca redeploy.
@@ -110,6 +112,16 @@ Fluxo:
 5. A Sabrina entra em `/admin` > `Feedbacks`.
 6. Ela pode aprovar, recusar, destacar, editar ou excluir.
 7. Somente feedbacks `approved` aparecem no site.
+
+## Keep-alive do Supabase Free
+
+O projeto tem uma rota protegida para manter o Supabase ativo no plano Free:
+
+- rota: `/api/cron/keep-supabase-awake`
+- config: `vercel.json`
+- agenda: todo dia ao meio-dia UTC (`0 12 * * *`)
+
+A rota faz uma leitura leve em `services` e nao grava nada no banco. Configure `CRON_SECRET` na Vercel para proteger o endpoint. O Vercel Cron envia esse segredo no header `Authorization: Bearer <CRON_SECRET>`.
 
 ## Checklist de seguranca
 
