@@ -6,6 +6,7 @@ export type AppointmentStatus =
   | "no_show";
 
 export type RequestStatus = "pending" | "approved" | "rejected";
+export type FeedbackStatus = "pending" | "approved" | "rejected";
 
 export type Customer = {
   id: string;
@@ -71,4 +72,26 @@ export type Expense = {
   spent_at: string;
   notes: string | null;
   created_at: string;
+};
+
+export type FeedbackMedia = {
+  id: string;
+  feedback_id: string;
+  kind: "avatar" | "result";
+  storage_path: string;
+  public_url: string;
+  created_at: string;
+};
+
+export type Feedback = {
+  id: string;
+  customer_name: string;
+  rating: number;
+  service_name: string | null;
+  comment: string;
+  status: FeedbackStatus;
+  featured: boolean;
+  created_at: string;
+  updated_at: string;
+  feedback_media?: FeedbackMedia[];
 };

@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
@@ -9,11 +11,12 @@ import type {
   AppointmentStatus,
   Customer,
   Expense,
+  Feedback,
   Service,
 } from "@/lib/dashboard/types";
 
 type ViewMode = "day" | "week" | "month" | "year";
-type Tab = "agenda" | "clientes" | "servicos" | "caixa" | "gastos";
+type Tab = "agenda" | "clientes" | "servicos" | "feedbacks" | "caixa" | "gastos";
 type RangeKey =
   | "7d"
   | "14d"
@@ -252,6 +255,7 @@ export default function AdminDashboard() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [requests, setRequests] = useState<AppointmentRequest[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
 
   const [appointmentForm, setAppointmentForm] = useState(emptyAppointment);
   const [customerForm, setCustomerForm] = useState({
@@ -328,7 +332,14 @@ export default function AdminDashboard() {
     setLoading(true);
     setNotice(null);
 
-    const [customersResult, servicesResult, appointmentsResult, requestsResult, expensesResult] =
+    const [
+      customersResult,
+      servicesResult,
+      appointmentsResult,
+      requestsResult,
+      expensesResult,
+      feedbacksResult,
+    ] =
       await Promise.all([
         supabase.from("customers").select("*").order("name"),
         supabase.from("services").select("*").order("name"),
@@ -341,6 +352,10 @@ export default function AdminDashboard() {
           .select("*, services(id,name,price,duration_minutes)")
           .order("created_at", { ascending: false }),
         supabase.from("expenses").select("*").order("spent_at", { ascending: false }),
+        supabase
+          .from("feedbacks")
+          .select("*, feedback_media(*)")
+          .order("created_at", { ascending: false }),
       ]);
 
     if (customersResult.data) setCustomers(customersResult.data);
@@ -371,6 +386,7 @@ export default function AdminDashboard() {
         }))
       );
     }
+    if (feedbacksResult.data) setFeedbacks(feedbacksResult.data as Feedback[]);
 
     setLoading(false);
   }
@@ -612,6 +628,9 @@ export default function AdminDashboard() {
 
   const pendingRequests = requests.filter(
     (request) => request.status === "pending"
+  );
+  const pendingFeedbacks = feedbacks.filter(
+    (feedback) => feedback.status === "pending"
   );
 
   const filteredCustomers = customers.filter((customer) => {
@@ -1111,6 +1130,58 @@ export default function AdminDashboard() {
     await loadAll();
   }
 
+  async function updateFeedback(
+    id: string,
+    updates: Partial<
+      Pick<Feedback, "customer_name" | "service_name" | "comment" | "status" | "featured">
+    >
+  ) {
+    if (!supabase) return;
+    const { error } = await supabase.from("feedbacks").update(updates).eq("id", id);
+    if (error) {
+      showToast("error", "Feedback nao atualizado", "Tente novamente.");
+      return;
+    }
+    showToast("success", "Feedback atualizado", "A vitrine foi ajustada.");
+    await loadAll();
+  }
+
+  async function editFeedback(feedback: Feedback) {
+    const customerName = window.prompt("Nome da cliente", feedback.customer_name);
+    if (customerName === null) return;
+    const serviceName = window.prompt(
+      "Procedimento",
+      feedback.service_name ?? ""
+    );
+    if (serviceName === null) return;
+    const comment = window.prompt("Texto do feedback", feedback.comment);
+    if (comment === null) return;
+
+    await updateFeedback(feedback.id, {
+      customer_name: customerName.trim() || feedback.customer_name,
+      service_name: serviceName.trim() || null,
+      comment: comment.trim() || feedback.comment,
+    });
+  }
+
+  async function deleteFeedback(feedback: Feedback) {
+    if (!supabase) return;
+    if (!window.confirm("Excluir este feedback e as fotos vinculadas?")) return;
+
+    const paths = (feedback.feedback_media ?? []).map((media) => media.storage_path);
+    if (paths.length > 0) {
+      await supabase.storage.from("feedback-media").remove(paths);
+    }
+
+    const { error } = await supabase.from("feedbacks").delete().eq("id", feedback.id);
+    if (error) {
+      showToast("error", "Feedback nao excluido", "Tente novamente.");
+      return;
+    }
+    showToast("info", "Feedback excluido", "Ele saiu do painel.");
+    await loadAll();
+  }
+
   const calendarPanel = (
     <Panel title="Calendario" className="lg:col-span-2">
       <p className="mb-4 text-sm font-medium text-nude-700">
@@ -1395,15 +1466,17 @@ export default function AdminDashboard() {
               {tab === "agenda" && "Agenda"}
               {tab === "clientes" && "Clientes"}
               {tab === "servicos" && "Servicos"}
+              {tab === "feedbacks" && "Feedbacks"}
               {tab === "caixa" && "Caixa"}
               {tab === "gastos" && "Gastos"}
             </span>
           </div>
-          <div className="grid grid-cols-5 gap-1.5">
+          <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
             {[
               ["agenda", "Agenda"],
               ["clientes", "Clientes"],
               ["servicos", "Serv."],
+              ["feedbacks", `Feed. ${pendingFeedbacks.length ? `(${pendingFeedbacks.length})` : ""}`],
               ["caixa", "Caixa"],
               ["gastos", "Gastos"],
             ].map(([key, label]) => (
@@ -1877,6 +1950,155 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </Panel>
+          </section>
+        )}
+
+        {tab === "feedbacks" && (
+          <section className="mt-6">
+            <Panel title="Feedbacks das clientes">
+              <div className="mb-4 grid gap-3 sm:grid-cols-3">
+                <MiniMetric label="Pendentes" value={String(pendingFeedbacks.length)} />
+                <MiniMetric
+                  label="Aprovados"
+                  value={String(feedbacks.filter((item) => item.status === "approved").length)}
+                />
+                <MiniMetric
+                  label="Destaques"
+                  value={String(feedbacks.filter((item) => item.featured).length)}
+                />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {feedbacks.length === 0 && (
+                  <Empty>Nenhum feedback recebido ainda.</Empty>
+                )}
+                {feedbacks.map((feedback) => {
+                  const media = feedback.feedback_media ?? [];
+                  const avatar = media.find((item) => item.kind === "avatar");
+                  const resultImages = media.filter((item) => item.kind === "result");
+                  return (
+                    <article
+                      key={feedback.id}
+                      className="rounded-2xl border border-nude-300 bg-nude-50 p-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        {avatar ? (
+                          <img
+                            src={avatar.public_url}
+                            alt=""
+                            className="h-12 w-12 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-rose-100 text-sm font-bold text-rose-700">
+                            {feedback.customer_name.slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-bold text-nude-950">
+                            {feedback.customer_name}
+                          </p>
+                          <p className="text-xs font-semibold text-rose-700">
+                            {feedback.rating} estrelas
+                            {feedback.service_name ? ` - ${feedback.service_name}` : ""}
+                          </p>
+                          <p className="mt-1 text-xs font-medium text-nude-500">
+                            {new Date(feedback.created_at).toLocaleDateString("pt-BR")}
+                          </p>
+                        </div>
+                      </div>
+
+                      <p className="mt-3 text-sm leading-relaxed text-nude-700">
+                        {feedback.comment}
+                      </p>
+
+                      {resultImages.length > 0 && (
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          {resultImages.slice(0, 2).map((image) => (
+                            <img
+                              key={image.id}
+                              src={image.public_url}
+                              alt=""
+                              className="aspect-square rounded-xl object-cover"
+                              loading="lazy"
+                            />
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-bold ${
+                            feedback.status === "approved"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : feedback.status === "rejected"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {feedback.status === "approved"
+                            ? "Aprovado"
+                            : feedback.status === "rejected"
+                              ? "Recusado"
+                              : "Pendente"}
+                        </span>
+                        {feedback.featured && (
+                          <span className="rounded-full bg-nude-900 px-3 py-1 text-xs font-bold text-white">
+                            Destaque
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                          onClick={() =>
+                            updateFeedback(feedback.id, {
+                              status: "approved",
+                              featured: feedback.featured,
+                            })
+                          }
+                          className="rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white"
+                        >
+                          Aprovar
+                        </button>
+                        <button
+                          onClick={() =>
+                            updateFeedback(feedback.id, {
+                              status: "rejected",
+                              featured: false,
+                            })
+                          }
+                          className="rounded-full border border-rose-200 bg-white px-3 py-1.5 text-xs font-medium text-nude-700"
+                        >
+                          Recusar
+                        </button>
+                        <button
+                          onClick={() =>
+                            updateFeedback(feedback.id, {
+                              featured: !feedback.featured,
+                            })
+                          }
+                          className="rounded-full border border-nude-200 bg-white px-3 py-1.5 text-xs font-medium text-nude-700"
+                        >
+                          {feedback.featured ? "Tirar destaque" : "Destacar"}
+                        </button>
+                        <button
+                          onClick={() => editFeedback(feedback)}
+                          className="rounded-full border border-nude-200 bg-white px-3 py-1.5 text-xs font-medium text-nude-700"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => deleteFeedback(feedback)}
+                          className="rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </Panel>
           </section>
