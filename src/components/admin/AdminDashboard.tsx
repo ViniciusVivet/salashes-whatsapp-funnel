@@ -600,6 +600,15 @@ export default function AdminDashboard() {
   const todaySales = todayAppointments
     .filter((appointment) => appointment.status === "done")
     .reduce((sum, appointment) => sum + Number(appointment.price || 0), 0);
+  const todayCustomersCount = new Set(
+    todayAppointments.map(
+      (appointment) =>
+        appointment.customer_id ??
+        appointment.customers?.phone ??
+        appointment.customers?.name ??
+        appointment.id
+    )
+  ).size;
 
   const pendingRequests = requests.filter(
     (request) => request.status === "pending"
@@ -1314,21 +1323,26 @@ export default function AdminDashboard() {
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:min-w-[520px]">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3 lg:min-w-[620px]">
               <MiniMetric label="Horarios hoje" value={String(todayAppointments.length)} />
+              <MiniMetric label="Clientes hoje" value={String(todayCustomersCount)} />
               <MiniMetric label="Pendentes" value={String(pendingRequests.length)} />
               <MiniMetric label="Vendido hoje" value={currency(todaySales)} />
             </div>
           </div>
-          <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {todayAppointments.slice(0, 6).map((appointment) => (
-              <AppointmentCard
+          <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
+            {todayAppointments.map((appointment) => (
+              <div
                 key={appointment.id}
-                appointment={appointment}
-                onStatus={updateAppointmentStatus}
-                onEdit={editAppointment}
-                onDelete={deleteAppointment}
-              />
+                className="w-[82vw] max-w-[360px] flex-none sm:w-[340px]"
+              >
+                <AppointmentCard
+                  appointment={appointment}
+                  onStatus={updateAppointmentStatus}
+                  onEdit={editAppointment}
+                  onDelete={deleteAppointment}
+                />
+              </div>
             ))}
             {todayAppointments.length === 0 && (
               <Empty>Nenhum atendimento marcado para hoje.</Empty>
