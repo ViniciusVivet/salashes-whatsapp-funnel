@@ -2,10 +2,10 @@ import SectionTitle from "./SectionTitle";
 import { CtaWhatsApp } from "./CtaWhatsApp";
 
 const GOOGLE_MAPS_URL =
-  "https://www.google.com/maps/search/?api=1&query=Rua+Ba%C3%ADa+dos+Pinheiros,+S%C3%A3o+Paulo,+SP";
+  "https://www.google.com/maps/search/?api=1&query=Travessa+Loandro+da+India,+3,+Itaquera,+Sao+Paulo,+SP,+08230-835";
 
 const highlights = [
-  "Fácil acesso – Ermelino Matarazzo",
+  "Fácil acesso – zona leste de SP",
   "Atendimento com horário marcado",
   "Veja a rota direto no Maps",
 ];
@@ -56,13 +56,13 @@ export default function Location() {
               </span>
               <div>
                 <p className="font-serif text-xl md:text-2xl text-nude-900 leading-snug">
-                  Rua Baía dos Pinheiros
+                  Travessa Loandro da India, 3
                 </p>
                 <p className="mt-1 text-nude-700 text-base md:text-lg">
-                  Ermelino Matarazzo / Vila Paranaguá
+                  Itaquera
                 </p>
                 <p className="mt-0.5 text-nude-600 text-sm md:text-base">
-                  São Paulo, SP
+                  São Paulo, SP - 08230-835
                 </p>
               </div>
             </div>

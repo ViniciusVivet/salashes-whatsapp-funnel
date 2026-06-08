@@ -34,7 +34,7 @@ export default function About() {
         />
         <div className="space-y-5 text-nude-700 leading-relaxed">
           <p className="text-lg md:text-xl text-nude-800">
-            Sou a <strong className="text-nude-900 font-semibold">Sabrina Silva</strong>, Lash & Brow Designer. Atendo no Ermelino Matarazzo e adoro quando a cliente sai sentindo que o olhar combina com ela — nem exagerado, nem sem graça.
+            Sou a <strong className="text-nude-900 font-semibold">Sabrina Silva</strong>, Lash & Brow Designer. Atendo na zona leste de SP e adoro quando a cliente sai sentindo que o olhar combina com ela — nem exagerado, nem sem graça.
           </p>
           <p>
             Cada procedimento é pensado no seu rosto, no seu dia a dia e no que você curte. Seja extensão de cílios, design de sobrancelhas ou brow lamination, o objetivo é sempre realçar o que você já tem de bonito.

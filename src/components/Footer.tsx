@@ -35,7 +35,7 @@ export default function Footer() {
         </div>
 
         <p className="mt-6 text-nude-500 text-sm">
-          Ermelino Matarazzo, São Paulo — SP
+          zona leste de SP — Itaquera
         </p>
 
         <p className="mt-10 text-nude-600 text-xs">

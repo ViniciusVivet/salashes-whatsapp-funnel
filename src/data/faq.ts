@@ -39,6 +39,6 @@ export const faqData: FaqItem[] = [
     id: "local",
     question: "Onde fica o atendimento?",
     answer:
-      "No Ermelino Matarazzo, São Paulo. O endereço completo eu envio depois que a gente confirma o agendamento pelo WhatsApp.",
+      "Na zona leste de SP, em Itaquera. O endereço é Travessa Loandro da India, 3, São Paulo - SP, 08230-835.",
   },
 ];

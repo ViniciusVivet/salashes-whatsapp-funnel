@@ -21,9 +21,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://sabrina-lashes.vercel.app"
   ),
-  title: "Sabrina Lashes | Lash & Brow Designer — Ermelino Matarazzo, SP",
+  title: "Sabrina Lashes | Lash & Brow Designer — Zona Leste de SP",
   description:
-    "Sabrina Silva, Lash & Brow Designer. Extensão de cílios, design de sobrancelhas e procedimentos para realçar seu olhar. Atendimento em Ermelino Matarazzo, São Paulo. Agende pelo WhatsApp.",
+    "Sabrina Silva, Lash & Brow Designer. Extensão de cílios, design de sobrancelhas e procedimentos para realçar seu olhar. Atendimento na zona leste de SP, em Itaquera. Agende pelo WhatsApp.",
   keywords: [
     "Sabrina Lashes",
     "cílios",
@@ -31,21 +31,22 @@ export const metadata: Metadata = {
     "Lash Designer",
     "Brow Designer",
     "extensão de cílios",
-    "Ermelino Matarazzo",
+    "zona leste de SP",
+    "Itaquera",
     "São Paulo",
   ],
   authors: [{ name: "Sabrina Silva", url: "https://www.instagram.com/salashes__" }],
   openGraph: {
     title: "Sabrina Lashes | Lash & Brow Designer",
     description:
-      "Realce seu olhar com atendimento especializado em cílios e sobrancelhas. Ermelino Matarazzo, São Paulo.",
+      "Realce seu olhar com atendimento especializado em cílios e sobrancelhas na zona leste de SP.",
     type: "website",
     images: [
       {
         url: "/images/og/og-sabrina-lashes.png",
         width: 1200,
         height: 630,
-        alt: "Sabrina Lashes - Lash & Brow Designer em Ermelino Matarazzo, Sao Paulo",
+        alt: "Sabrina Lashes - Lash & Brow Designer na zona leste de SP",
       },
     ],
   },
@@ -53,7 +54,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Sabrina Lashes | Lash & Brow Designer",
     description:
-      "Extensao de cilios e design de sobrancelhas com foco em valorizar o seu olhar em Ermelino Matarazzo, Sao Paulo.",
+      "Extensao de cilios e design de sobrancelhas com foco em valorizar o seu olhar na zona leste de SP.",
     images: ["/images/og/og-sabrina-lashes.png"],
   },
   robots: "index, follow",

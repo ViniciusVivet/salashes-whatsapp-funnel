@@ -1,6 +1,6 @@
 # Sabrina Lashes — Site Institucional
 
-Site one page da **Sabrina Lashes** (Sabrina Silva — Lash & Brow Designer), focado em conversão para WhatsApp. Atendimento em Ermelino Matarazzo, São Paulo.
+Site one page da **Sabrina Lashes** (Sabrina Silva — Lash & Brow Designer), focado em conversão para WhatsApp. Atendimento na zona leste de SP, em Itaquera.
 
 ## Stack
 
