@@ -302,6 +302,15 @@ export default function AdminDashboard() {
     setToasts((current) => current.filter((toast) => toast.id !== id));
   }
 
+  function scrollToSection(id: string) {
+    window.setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 0);
+  }
+
   useEffect(() => {
     if (!supabase) {
       setAuthLoading(false);
@@ -880,6 +889,8 @@ export default function AdminDashboard() {
   function editAppointment(appointment: Appointment) {
     setTab("agenda");
     setEditingAppointmentId(appointment.id);
+    setSelectedDate(appointment.starts_at.slice(0, 10));
+    setViewMode("day");
     setAppointmentForm({
       customerId: appointment.customer_id,
       serviceId: appointment.service_id ?? "",
@@ -891,7 +902,13 @@ export default function AdminDashboard() {
       paid: appointment.paid,
       notes: appointment.notes ?? "",
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToSection("appointment-form");
+  }
+
+  function openDayCalendar(date: Date) {
+    setSelectedDate(dateInputValue(date));
+    setViewMode("day");
+    scrollToSection("calendar-panel");
   }
 
   function startAppointmentForDate(date: Date) {
@@ -900,12 +917,18 @@ export default function AdminDashboard() {
       ...emptyAppointment,
       date: dateInputValue(date),
     });
-    window.setTimeout(() => {
-      document.getElementById("appointment-form")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 0);
+    scrollToSection("appointment-form");
+  }
+
+  function openTodayAppointments() {
+    setTab("agenda");
+    openDayCalendar(new Date());
+    scrollToSection("calendar-panel");
+  }
+
+  function openPendingRequests() {
+    setTab("agenda");
+    scrollToSection("pending-requests");
   }
 
   async function deleteAppointment(id: string) {
@@ -983,6 +1006,7 @@ export default function AdminDashboard() {
       leadSource: customer.lead_source ?? "",
       notes: customer.notes ?? "",
     });
+    scrollToSection("customer-form");
   }
 
   async function deleteCustomer(id: string) {
@@ -1036,6 +1060,7 @@ export default function AdminDashboard() {
       duration: String(service.duration_minutes),
       price: String(service.price),
     });
+    scrollToSection("service-form");
   }
 
   async function toggleService(service: Service) {
@@ -1116,6 +1141,7 @@ export default function AdminDashboard() {
       spentAt: expense.spent_at,
       notes: expense.notes ?? "",
     });
+    scrollToSection("expense-form");
   }
 
   async function deleteExpense(id: string) {
@@ -1233,50 +1259,61 @@ export default function AdminDashboard() {
                   : "grid-cols-7"
             }`}
           >
-            {calendarBuckets.map((bucket) => (
-              <div
-                key={bucket.key}
-                className={`min-h-[108px] rounded-xl border p-1.5 text-left shadow-sm transition hover:border-rose-400 hover:bg-rose-50 sm:min-h-[126px] sm:p-2 ${
-                  bucket.muted
-                    ? "border-nude-200 bg-nude-100/70 text-nude-400"
-                    : "border-nude-300 bg-white text-nude-900"
-                }`}
-              >
-                <span className="mb-2 flex items-center justify-between border-b border-nude-200 pb-1">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.06em] sm:text-xs sm:tracking-[0.08em]">
-                    {bucket.label}
+            {calendarBuckets.map((bucket) => {
+              const visibleItems =
+                viewMode === "day" ? bucket.items : bucket.items.slice(0, 3);
+              const hiddenCount = bucket.items.length - visibleItems.length;
+
+              return (
+                <div
+                  key={bucket.key}
+                  className={`min-h-[108px] rounded-xl border p-1.5 text-left shadow-sm transition hover:border-rose-400 hover:bg-rose-50 sm:min-h-[126px] sm:p-2 ${
+                    bucket.muted
+                      ? "border-nude-200 bg-nude-100/70 text-nude-400"
+                      : "border-nude-300 bg-white text-nude-900"
+                  }`}
+                >
+                  <span className="mb-2 flex items-center justify-between border-b border-nude-200 pb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.06em] sm:text-xs sm:tracking-[0.08em]">
+                      {bucket.label}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => startAppointmentForDate(bucket.date)}
+                      className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700 hover:bg-rose-200 sm:px-2"
+                      aria-label={`Criar agendamento em ${bucket.label}`}
+                    >
+                      +
+                    </button>
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => startAppointmentForDate(bucket.date)}
-                    className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700 hover:bg-rose-200 sm:px-2"
-                    aria-label={`Criar agendamento em ${bucket.label}`}
-                  >
-                    +
-                  </button>
-                </span>
-                <span className="block space-y-1.5">
-                  {bucket.items.length === 0 ? (
-                    <span className="block text-xs font-medium text-nude-500">
-                      Livre
-                    </span>
-                  ) : (
-                    bucket.items.slice(0, 3).map((appointment) => (
-                      <CalendarEventChip
-                        key={appointment.id}
-                        appointment={appointment}
-                        onEdit={editAppointment}
-                      />
-                    ))
-                  )}
-              {bucket.items.length > 3 && (
-                <span className="block text-[10px] font-semibold text-nude-700 sm:text-xs">
-                  +{bucket.items.length - 3} horarios
-                    </span>
-                  )}
-                </span>
-              </div>
-            ))}
+                  <span className="block space-y-1.5">
+                    {bucket.items.length === 0 ? (
+                      <span className="block text-xs font-medium text-nude-500">
+                        Livre
+                      </span>
+                    ) : (
+                      visibleItems.map((appointment) => (
+                        <CalendarEventChip
+                          key={appointment.id}
+                          appointment={appointment}
+                          onEdit={editAppointment}
+                        />
+                      ))
+                    )}
+                    {hiddenCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => openDayCalendar(bucket.date)}
+                        className="block w-full rounded-md border border-nude-200 bg-white px-1.5 py-1 text-left text-[10px] font-semibold text-nude-700 shadow-sm hover:border-rose-300 hover:bg-rose-50 sm:text-xs"
+                        aria-label={`Ver todos os horarios de ${bucket.label}`}
+                      >
+                        +{hiddenCount} horarios
+                      </button>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -1395,9 +1432,17 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3 lg:min-w-[620px]">
-              <MiniMetric label="Horarios hoje" value={String(todayAppointments.length)} />
+              <MiniMetric
+                label="Horarios hoje"
+                value={String(todayAppointments.length)}
+                onClick={openTodayAppointments}
+              />
               <MiniMetric label="Clientes hoje" value={String(todayCustomersCount)} />
-              <MiniMetric label="Pendentes" value={String(pendingRequests.length)} />
+              <MiniMetric
+                label="Pendentes"
+                value={String(pendingRequests.length)}
+                onClick={openPendingRequests}
+              />
               <MiniMetric label="Vendido hoje" value={currency(todaySales)} />
             </div>
           </div>
@@ -1497,8 +1542,11 @@ export default function AdminDashboard() {
 
         {tab === "agenda" && (
           <section className="mt-6 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-            {calendarPanel}
+            <div id="calendar-panel" className="scroll-mt-6 lg:col-span-2">
+              {calendarPanel}
+            </div>
 
+            <div id="pending-requests" className="scroll-mt-6">
             <Panel title="Solicitacoes pendentes">
               <div className="space-y-3">
                 {requests.filter((request) => request.status === "pending").length === 0 && (
@@ -1553,6 +1601,7 @@ export default function AdminDashboard() {
                   ))}
               </div>
             </Panel>
+            </div>
 
             <div id="appointment-form" className="scroll-mt-6" />
             <Panel title={editingAppointmentId ? "Editar agendamento" : "Novo agendamento"}>
@@ -1708,6 +1757,7 @@ export default function AdminDashboard() {
 
         {tab === "clientes" && (
           <section className="mt-6 grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+            <div id="customer-form" className="scroll-mt-6">
             <Panel title={editingCustomerId ? "Editar cliente" : "Nova cliente"}>
               <form onSubmit={createCustomer} className="grid gap-3">
                 <Input
@@ -1775,6 +1825,7 @@ export default function AdminDashboard() {
                 )}
               </form>
             </Panel>
+            </div>
             <Panel title="Clientes cadastradas">
               <div className="mb-4">
                 <Input
@@ -1855,6 +1906,7 @@ export default function AdminDashboard() {
 
         {tab === "servicos" && (
           <section className="mt-6 grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+            <div id="service-form" className="scroll-mt-6">
             <Panel title={editingServiceId ? "Editar procedimento" : "Novo procedimento"}>
               <form onSubmit={createService} className="grid gap-3">
                 <Input
@@ -1912,6 +1964,7 @@ export default function AdminDashboard() {
                 )}
               </form>
             </Panel>
+            </div>
             <Panel title="Procedimentos">
               <div className="grid gap-3 md:grid-cols-2">
                 {services.map((service) => (
@@ -2129,7 +2182,7 @@ export default function AdminDashboard() {
                 <Metric label="Servico destaque" value={topService} />
               </div>
               <div className="mt-6 overflow-x-auto">
-                <table className="w-full min-w-[720px] text-left text-sm">
+                <table className="w-full min-w-[800px] text-left text-sm">
                   <thead className="text-xs uppercase tracking-[0.12em] text-nude-500">
                     <tr>
                       <th scope="col" className="py-2">Data</th>
@@ -2137,6 +2190,7 @@ export default function AdminDashboard() {
                       <th scope="col">Procedimento</th>
                       <th scope="col">Valor</th>
                       <th scope="col">Status</th>
+                      <th scope="col">Acoes</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2155,6 +2209,15 @@ export default function AdminDashboard() {
                             ? ` · ${appointment.payment_method}`
                             : ""}
                         </td>
+                        <td>
+                          <button
+                            type="button"
+                            onClick={() => editAppointment(appointment)}
+                            className="rounded-full border border-nude-200 bg-white px-3 py-1 text-xs text-nude-700 hover:bg-rose-50"
+                          >
+                            Abrir
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -2166,6 +2229,7 @@ export default function AdminDashboard() {
 
         {tab === "gastos" && (
           <section className="mt-6 grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+            <div id="expense-form" className="scroll-mt-6">
             <Panel title={editingExpenseId ? "Editar gasto" : "Novo gasto"}>
               <p className="mb-4 text-sm font-medium text-nude-700">
                 Use esta area para registrar custos do negocio, como materiais,
@@ -2239,6 +2303,7 @@ export default function AdminDashboard() {
                 )}
               </form>
             </Panel>
+            </div>
             <Panel title="Gastos cadastrados">
               <div className="mb-4 grid gap-3 md:grid-cols-3">
                 <Input
@@ -2511,15 +2576,41 @@ function MetricFilter({
   );
 }
 
-function MiniMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0 rounded-2xl border border-nude-300 bg-nude-50 p-2.5 sm:p-4">
+function MiniMetric({
+  label,
+  value,
+  onClick,
+}: {
+  label: string;
+  value: string;
+  onClick?: () => void;
+}) {
+  const content = (
+    <>
       <p className="text-[10px] font-bold leading-tight text-nude-700 sm:text-xs">
         {label}
       </p>
       <p className="mt-1 break-words font-serif text-lg font-semibold text-nude-900 sm:text-2xl">
         {value}
       </p>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="min-w-0 rounded-2xl border border-nude-300 bg-nude-50 p-2.5 text-left transition hover:border-rose-300 hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-200 sm:p-4"
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className="min-w-0 rounded-2xl border border-nude-300 bg-nude-50 p-2.5 sm:p-4">
+      {content}
     </div>
   );
 }
